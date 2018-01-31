@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
@@ -10,43 +11,51 @@ namespace VisitorTrack.EntityManager
     {
         protected readonly DocumentClient DocumentClient;
 
-        protected BaseManager(string databaseName, string endpointUri, string accountKey)
+        protected BaseManager(string databaseId, string endpointUrl, string accountKey)
         {
-            DatabaseName = databaseName;
-            EndpointUri = endpointUri;
-            AccountKey = accountKey;
+            if (string.IsNullOrEmpty(databaseId))
+                throw new ArgumentNullException(nameof(databaseId));
 
-            DocumentClient = new DocumentClient(new Uri(endpointUri), accountKey);
+            if (string.IsNullOrEmpty(endpointUrl))
+                throw new ArgumentNullException(nameof(endpointUrl));
+
+            if (string.IsNullOrEmpty(accountKey))
+                throw new ArgumentNullException(nameof(accountKey));
+
+            DatabaseId = databaseId;
+
+            DocumentClient = new DocumentClient(new Uri(endpointUrl), accountKey);
         }
 
-        protected string DatabaseName { get; }
-
-        protected string EndpointUri { get; }
-
-        protected string AccountKey { get; }
+        protected string DatabaseId { get; }
 
         public void Dispose() => DocumentClient?.Dispose();
 
-        protected abstract string CollectionName { get; }
+        protected abstract string CollectionId { get; }
 
-        public async Task CreateCollectionIfNotExistsAsync()
+        protected Uri GetCollectionUri() => UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId);
+
+        protected string CanonicalizeEmail(string email) => email.ToLower().Trim();
+
+        public async Task CreateIfNotExistsAsync()
         {
-            await DocumentClient.CreateDatabaseIfNotExistsAsync(new Database() { Id = DatabaseName });
+            await DocumentClient.CreateDatabaseIfNotExistsAsync(new Database() { Id = DatabaseId });
 
             await DocumentClient.CreateDocumentCollectionIfNotExistsAsync(
-                UriFactory.CreateDatabaseUri(DatabaseName), new DocumentCollection() { Id = CollectionName });
+                UriFactory.CreateDatabaseUri(DatabaseId), new DocumentCollection() { Id = CollectionId });
         }
 
-        public async Task CreateAsync(object entity)
-            =>  await DocumentClient.CreateDocumentAsync(
-                    UriFactory.CreateDocumentCollectionUri(DatabaseName, CollectionName), entity);
+        protected async Task<string> CreateEntityAsync(object entity)
+            => (await DocumentClient.CreateDocumentAsync(
+                    UriFactory.CreateDocumentCollectionUri(DatabaseId, CollectionId), entity)).Resource.Id;
 
-        public async Task DeleteAsync(IEntity entity)
+        public async Task DeleteEntityAsync(string entityId)
             => await DocumentClient.DeleteDocumentAsync(
-                    UriFactory.CreateDocumentUri(DatabaseName, CollectionName, entity.Id));
+                    UriFactory.CreateDocumentUri(DatabaseId, CollectionId, entityId));
 
-        public async Task UpdateAsync(string id, object entity)
-            =>  await DocumentClient.ReplaceDocumentAsync(
-                    UriFactory.CreateDocumentUri(DatabaseName, CollectionName, id), entity);
+        public async Task UpdateEntityAsync(string id, object entity)
+            => await DocumentClient.ReplaceDocumentAsync(
+                    UriFactory.CreateDocumentUri(DatabaseId, CollectionId, id), entity);
+
     }
 }

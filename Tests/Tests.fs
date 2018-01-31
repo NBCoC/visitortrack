@@ -4,22 +4,44 @@ open System
 open Xunit
 open VisitorTrack.Entities
 open VisitorTrack.EntityManager
+open VisitorTrack.EntityManager.Dtos
 
 let [<Literal>] EndpointUri = "https://visitor-track.documents.azure.com:443/"
-let [<Literal>] AccountKey = ""
+let [<Literal>] AccountKey = "0XSGNIhL2ITzfRi6oCf6nM0nTR8acArm2AASexCEwORmqdUOhKx3TXTGGrphjXbwnxlbnGKCOIqCSVRoFAnn1g=="
 
 [<Fact>]
 let ``Create Demo User`` () =
-    use manager = new UserManager("visitor-track-dev", EndpointUri, AccountKey)
-    manager.CreateCollectionIfNotExistsAsync() |> Async.AwaitTask |> Async.RunSynchronously
+    use manager = new UserManager("DEV-DB", EndpointUri, AccountKey)
 
-    let user = 
-        User(
+    manager.CreateIfNotExistsAsync() 
+    |> Async.AwaitTask 
+    |> Async.RunSynchronously
+
+    let dto = 
+        UpsertUserDto(
             Email = "demo.user@nbchurchfamily.org",
             DisplayName = "Demo User",
-            Role =  RoleEnum.Editor
+            RoleId =  RoleEnum.Viewer
         )
 
-    manager.CreateAsync(user) |> Async.AwaitTask |> Async.RunSynchronously
+    let entityId = 
+        manager.CreateAsync(dto, "P@55word") 
+        |> Async.AwaitTask 
+        |> Async.RunSynchronously
 
-    Assert.True(true)
+    let user =
+        manager.Find(entityId)
+
+    let result = 
+        manager.AuthenticateAsync(user.Email, "P@55word") 
+        |> Async.AwaitTask 
+        |> Async.RunSynchronously
+
+    Assert.Equal(user.Email, result.Email);
+
+    manager.DeleteEntityAsync(user.Id) 
+    |> Async.AwaitTask 
+    |> Async.RunSynchronously
+
+    Assert.True(true);
+

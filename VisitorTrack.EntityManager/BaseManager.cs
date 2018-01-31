@@ -4,7 +4,7 @@ using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
 using VisitorTrack.Entities;
 
-namespace VisitorTrack.Database
+namespace VisitorTrack.EntityManager
 {
     public abstract class BaseManager : IDisposable
     {
@@ -31,8 +31,7 @@ namespace VisitorTrack.Database
 
         public async Task CreateCollectionIfNotExistsAsync()
         {
-            await DocumentClient.CreateDatabaseIfNotExistsAsync(
-                new Microsoft.Azure.Documents.Database() { Id = DatabaseName });
+            await DocumentClient.CreateDatabaseIfNotExistsAsync(new Database() { Id = DatabaseName });
 
             await DocumentClient.CreateDocumentCollectionIfNotExistsAsync(
                 UriFactory.CreateDatabaseUri(DatabaseName), new DocumentCollection() { Id = CollectionName });

@@ -1,6 +1,6 @@
 ﻿using VisitorTrack.Entities;
 
-namespace VisitorTrack.Database
+namespace VisitorTrack.EntityManager
 {
     public class UserManager : BaseManager
     {

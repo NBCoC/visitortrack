@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\VisitorTrack.Database\VisitorTrack.Database.csproj" />
+    <ProjectReference Include="..\VisitorTrack.EntityManager\VisitorTrack.EntityManager.csproj" />
   </ItemGroup>
 
 </Project>

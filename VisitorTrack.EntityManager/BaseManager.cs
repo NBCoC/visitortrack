@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Documents;
 using Microsoft.Azure.Documents.Client;
-using VisitorTrack.Entities;
+using VisitorTrack.EntityManager.Models;
 
 namespace VisitorTrack.EntityManager
 {

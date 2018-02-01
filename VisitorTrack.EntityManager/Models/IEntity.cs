@@ -1,4 +1,4 @@
-namespace VisitorTrack.Entities
+namespace VisitorTrack.EntityManager.Models
 {
     public interface IEntity
     {

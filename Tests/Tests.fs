@@ -2,7 +2,7 @@ module Tests
 
 open System
 open Xunit
-open VisitorTrack.Entities
+open VisitorTrack.EntityManager.Models
 open VisitorTrack.EntityManager
 open VisitorTrack.EntityManager.Dtos
 

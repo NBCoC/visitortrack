@@ -2,7 +2,7 @@ using System;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace VisitorTrack.Entities
+namespace VisitorTrack.EntityManager.Models
 {
     public static class EntityHelper
     {

@@ -1,4 +1,4 @@
-using VisitorTrack.Entities;
+using VisitorTrack.EntityManager.Models;
 
 namespace VisitorTrack.EntityManager.Dtos
 {

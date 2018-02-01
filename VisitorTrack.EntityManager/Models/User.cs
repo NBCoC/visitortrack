@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace VisitorTrack.Entities
+namespace VisitorTrack.EntityManager.Models
 {
     public class User : IEntity
     {

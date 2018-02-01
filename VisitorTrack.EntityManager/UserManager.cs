@@ -1,5 +1,5 @@
 ﻿using Microsoft.Azure.Documents.Client;
-using VisitorTrack.Entities;
+using VisitorTrack.EntityManager.Models;
 using System.Linq;
 using VisitorTrack.EntityManager.Dtos;
 using System;
@@ -75,7 +75,7 @@ namespace VisitorTrack.EntityManager
             var entity = new User()
             {
                 DisplayName = dto.DisplayName,
-                Email = dto.Email,
+                Email = CanonicalizeEmail(dto.Email),
                 Role = dto.RoleId,
                 Password = HashProvider.Hash(password)
             };

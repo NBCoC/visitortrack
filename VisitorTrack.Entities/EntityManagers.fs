@@ -13,48 +13,68 @@ module BaseManager =
         let error (ex: exn) =
             ex.ToString()
 
-        task 
-        |> Async.AwaitTask
+        Async.AwaitTask task
         |> Async.Catch
         |> Async.RunSynchronously
         |> Result.ofChoice
         |> Result.doubleMap ok error
 
-    let validateCredentials endpointUrl accountKey = result {
-        let! url = EndpointUrl.create endpointUrl
-        let! key = AccountKey.create accountKey
+    let validateEntityId (EntityId entityId) =
+        if String.IsNullOrEmpty(entityId) then
+            Result.Error "Entity ID is required"
+        else (EntityId entityId) |> Result.Ok
 
-        return url, key
+    let getConnection (opts: StorageOptions) = result {
+
+        let validateCredentials endpointUrl accountKey = result {
+            let! url = EndpointUrl.create endpointUrl
+            let! key = AccountKey.create accountKey
+
+            return url, key
+        }
+
+        let validateCollectionId databaseId collectionId = result {
+            let! id = DatabaseId.create databaseId
+            let! col = CollectionId.create collectionId
+
+            return id, col
+        }
+
+        let getClient (endpointUrl, accountKey) =
+            let url = EndpointUrl.value endpointUrl
+            let key = AccountKey.value accountKey
+            let uri = Uri(url)
+
+            new DocumentClient(uri, key)
+
+        let! (databaseId, collectionId) = validateCollectionId opts.DatabaseId opts.CollectionId
+
+        let! client =
+            validateCredentials opts.EndpointUrl opts.AccountKey
+            |> Result.map getClient
+
+        return client, databaseId, collectionId
     }
 
-    let validateCollectionId databaseId collectionId = result {
-        let! id = DatabaseId.create databaseId
-        let! col = CollectionId.create collectionId
+    let closeConnection (connection, x) =
+        let (client: DocumentClient, _, _) = connection
 
-        return id, col
-    }
-
-    let getDocumentClient (endpointUrl, accountKey) =
-        let url = EndpointUrl.value endpointUrl
-        let key = AccountKey.value accountKey
-        let uri = Uri(url)
-
-        new DocumentClient(uri, key)
-
-    let closeDocumentClient (client: DocumentClient, x) =
         client.Dispose(); x
 
     let getCollectionUri databaseId collectionId =
-        let id = DatabaseId.value databaseId
-        let col = CollectionId.value collectionId
+        let database = DatabaseId.value databaseId
+        let collection = CollectionId.value collectionId
 
-        UriFactory.CreateDocumentCollectionUri(id, col)
+        UriFactory.CreateDocumentCollectionUri(database, collection)
 
-    let getDocumentUri databaseId collectionId (EntityId entityId) =
-        let id = DatabaseId.value databaseId
-        let col = CollectionId.value collectionId
+    let getDocumentUri databaseId collectionId entityId = result {
+        let database = DatabaseId.value databaseId
+        let collection = CollectionId.value collectionId
+        let! (EntityId id) = validateEntityId entityId
 
-        UriFactory.CreateDocumentUri(id, col, entityId)
+        return UriFactory.CreateDocumentUri(database, collection, id)
+    }
+        
 
     let createDatabase databaseId (client: DocumentClient) =
         let id = DatabaseId.value databaseId
@@ -63,28 +83,33 @@ module BaseManager =
         client.CreateDatabaseIfNotExistsAsync(Database(Id = id))
         |> taskToResult ok
 
-    let createCollection databaseId collectionId (client: DocumentClient) =
+    let createCollection connection =
+        let (client: DocumentClient, databaseId, collectionId) = connection
+
         let id = DatabaseId.value databaseId
         let col = CollectionId.value collectionId
-        let ok _ = client
+        let ok _ = connection
 
         client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(id), DocumentCollection(Id = col))
         |> taskToResult ok
 
-    let createEntity databaseId collectionId entity (client: DocumentClient) =
+    let createEntity entity connection =
+        let (client: DocumentClient, databaseId, collectionId) = connection
+
         let uri = getCollectionUri databaseId collectionId
         let ok (response: ResourceResponse<Document>) = response.Resource.Id |> EntityId
 
         client.CreateDocumentAsync(uri, entity)
         |> taskToResult ok
 
-    let deleteEntity databaseId collectionId entityId (client: DocumentClient) =
-        let id = EntityId.value entityId
-        let uri = getDocumentUri databaseId collectionId id
+    let deleteEntity entityId connection = result {
+        let (client: DocumentClient, databaseId, collectionId) = connection
+
+        let! uri = getDocumentUri databaseId collectionId entityId
         let ok _ = ()
 
-        client.DeleteDocumentAsync(uri)
-        |> taskToResult ok
+        return! client.DeleteDocumentAsync(uri) |> taskToResult ok
+    }
 
 [<RequireQualifiedAccess>]
 module UserManager =
@@ -105,19 +130,14 @@ module UserManager =
     let getPasswordValue (HashedPassword x) = x
 
     let create (opts: StorageOptions) (request: ICreateUser) =
-        let (defaultPassword, dto) = request
+        let (DefaultPassword defaultPassword, dto) = request
 
         let create = result {
-            let! (databaseId, collectionId) = validateCollectionId opts.DatabaseId opts.CollectionId
-
             let! displayName = String75.create "Display Name" dto.DisplayName
             let! emailAddress = EmailAddress.create dto.Email
-            let! password = DefaultPassword.value defaultPassword |> HashProvider.hash 
+            let! password = defaultPassword |> HashProvider.hash 
             let role = canonicalizeRole dto.RoleId
-
-            let! client =
-                validateCredentials opts.EndpointUrl opts.AccountKey
-                |> Result.map getDocumentClient
+            let! connection = getConnection opts
 
             let entity = {
                 Id = ""
@@ -128,25 +148,20 @@ module UserManager =
                 RoleId = getRoleId role
             }
 
-            let! entityId = createEntity databaseId collectionId entity client
+            let! entityId = createEntity entity connection
 
-            return (client, entityId)
+            return (connection, entityId)
         }
 
-        create |> Result.map closeDocumentClient
+        create |> Result.map closeConnection
 
     let delete (opts: StorageOptions) entityId =
 
         let delete = result {
-            let! (databaseId, collectionId) = validateCollectionId opts.DatabaseId opts.CollectionId
+            let! connection = getConnection opts
+            let! data = deleteEntity entityId connection
 
-            let! client =
-                validateCredentials opts.EndpointUrl opts.AccountKey
-                |> Result.map getDocumentClient
-
-            let! data = deleteEntity databaseId collectionId entityId client
-
-            return (client, data)
+            return (connection, data)
         }
 
-        delete |> Result.map closeDocumentClient
+        delete |> Result.map closeConnection

@@ -93,19 +93,3 @@ module EmailAddress =
         |> Result.bind validate
 
     let value (EmailAddress x) = x
-
-module DefaultPassword =
-    type T = private DefaultPassword of string
-
-    let create value =
-        StringType.create "Default Password" 15 DefaultPassword value
-
-    let value (DefaultPassword x) = x
-
-module EntityId =
-    type T = private EntityId of string
-
-    let create value =
-        StringType.create "Entity ID" 256 EntityId value
-
-    let value (EntityId x) = x

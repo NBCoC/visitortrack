@@ -1,19 +1,15 @@
 namespace VisitorTrack.EntityManager
 
-open System
-open Newtonsoft.Json
-
-module Models =
+module Entities =
 
     [<CLIMutable>]
     type User = {
-        [<JsonProperty(PropertyName = "id")>]
-        Id: string
-        Email: string
-        Password: string
-        Token: string
-        DisplayName: string
-        RoleId: int
+        id: string
+        email: string
+        password: string
+        token: string
+        displayName: string
+        roleId: int
     } 
 
 module Dtos =

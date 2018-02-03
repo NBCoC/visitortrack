@@ -4,7 +4,7 @@ open System
 open Microsoft.Azure.Documents
 open Microsoft.Azure.Documents.Client
 open ComputationExpressions
-open Models
+open Entities
 open DataTypes
 
 module BaseManager =
@@ -140,12 +140,12 @@ module UserManager =
             let! connection = getConnection opts
 
             let entity = {
-                Id = ""
-                Token = ""
-                DisplayName = String75.value displayName
-                Email = EmailAddress.value emailAddress
-                Password = getPasswordValue password
-                RoleId = getRoleId role
+                id = ""
+                token = ""
+                displayName = String75.value displayName
+                email = EmailAddress.value emailAddress
+                password = getPasswordValue password
+                roleId = getRoleId role
             }
 
             let! entityId = createEntity entity connection

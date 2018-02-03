@@ -1,10 +1,11 @@
-﻿namespace VisitorTrack.EntityManager
+﻿namespace AzureFunctions
 
 open System
 open System.Net
 open System.Net.Http
 open Newtonsoft.Json
 open Microsoft.Azure.WebJobs.Host
+open VisitorTrack.EntityManager
 open VisitorTrack.EntityManager.Dtos
 open VisitorTrack.EntityManager.DataTypes
 
@@ -41,4 +42,3 @@ module CreateUser =
                 return req.CreateResponse(HttpStatusCode.BadRequest, "Specify a Name value")
                     
         } |> Async.RunSynchronously
-

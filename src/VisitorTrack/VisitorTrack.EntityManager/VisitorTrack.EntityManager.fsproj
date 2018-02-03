@@ -25,11 +25,6 @@
     <Compile Include="DomainTypes.fs" />
     <Compile Include="Utilities.fs" />
     <Compile Include="EntityManagers.fs" />
-    <Compile Include="AzureFunctions.fs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="function.json" />
   </ItemGroup>
 
 </Project>

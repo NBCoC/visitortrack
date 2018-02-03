@@ -1,6 +1,4 @@
 ﻿{
-  "scriptFile": "VisitorTrack.EntityManager.dll",
-  "entryPoint": "VisitorTrack.EntityManager.CreateUser.Run",
   "bindings": [
     {
       "authLevel": "function",
@@ -14,5 +12,7 @@
       "direction": "out"
     }
   ],
-  "disabled": false
+  "disabled": false,
+  "scriptFile": "../Binaries/AzureFunctions/AzureFunctions.dll",
+  "entryPoint": "AzureFunctions.CreateUser.Run"
 }

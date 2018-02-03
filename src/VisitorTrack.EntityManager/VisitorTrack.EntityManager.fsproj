@@ -27,8 +27,4 @@
     <Compile Include="EntityManagers.fs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="UserManager.fsx" />
-  </ItemGroup>
-
 </Project>

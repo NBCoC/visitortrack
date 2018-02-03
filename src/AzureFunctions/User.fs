@@ -48,7 +48,7 @@ module DeleteUser =
             let storageOptions = Settings.getStorageOptions "UserCollection"
 
             let idQueryString (item: KeyValuePair<string, string>) =
-                if String.Equals("id", item.Key, StringComparison.OrdinalIgnoreCase) then
+                if String.Compare(item.Key, "id", true) = 0 then
                     EntityId item.Value |> Some
                 else None
 

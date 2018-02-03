@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>VisitorTrack.Entities</AssemblyName>
-    <Version>0.1.0-beta-100</Version>
-    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <AssemblyName>VisitorTrack.EntityManager</AssemblyName>
+    <Version>0.1.0-beta-101</Version>
+    <TargetFramework>net461</TargetFramework>
     <Optimize>True</Optimize>
     <OutputType>Library</OutputType>
     <Authors>Alberto De Pena</Authors>
@@ -12,13 +12,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.3" />
     <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.19.1" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB.Core" Version="1.7.1" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="2.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="System.Net.Http" Version="4.3.3" />
     <PackageReference Include="System.Net.Http.Formatting.Extension" Version="5.2.3.0" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Compile Include="ComputationExpressions.fs" />
     <Compile Include="ResultExtensions.fs" />
@@ -26,7 +25,11 @@
     <Compile Include="DomainTypes.fs" />
     <Compile Include="Utilities.fs" />
     <Compile Include="EntityManagers.fs" />
-    <Compile Include="MyFunction.fs" />
+    <Compile Include="AzureFunctions.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="function.json" />
   </ItemGroup>
 
 </Project>

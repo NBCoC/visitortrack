@@ -10,11 +10,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="CreateUser.fs" />
+    <Compile Include="Settings.fs" />
+    <Compile Include="User.fs" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="CreateUser.json" />
+    <Content Include="DeleteUser.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
   </ItemGroup>
 
   <ItemGroup>

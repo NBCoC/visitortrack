@@ -1,4 +1,4 @@
-﻿{
+{
   "bindings": [
     {
       "authLevel": "function",
@@ -6,7 +6,7 @@
       "type": "httpTrigger",
       "direction": "in",
       "methods": [
-        "post"
+        "get"
       ]
     },
     {
@@ -17,5 +17,5 @@
   ],
   "disabled": false,
   "scriptFile": "../Binaries/AzureFunctions/AzureFunctions.dll",
-  "entryPoint": "AzureFunctions.CreateUser.Run"
+  "entryPoint": "AzureFunctions.DeleteUser.Run"
 }

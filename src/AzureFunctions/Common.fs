@@ -2,7 +2,7 @@ namespace AzureFunctions
 
 open System
 //open System.Configuration
-open VisitorTrack.EntityManager.DataTypes
+open AzureFunctions.DataTypes
 open System.Collections.Generic
 open System.Net.Http
 open Newtonsoft.Json

@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="ComputationExpressions.fs" />
+    <Compile Include="ResultExtensions.fs" />
+    <Compile Include="PrimitiveTypes.fs" />
+    <Compile Include="DomainTypes.fs" />
+    <Compile Include="Utilities.fs" />
+    <Compile Include="EntityManagers.fs" />
     <Compile Include="Common.fs" />
     <Compile Include="UserFunctions.fs" />
   </ItemGroup>
@@ -22,14 +28,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.3" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.3" />
+    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.19.1" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="1.0.6" />
     <PackageReference Include="Microsoft.Azure.WebJobs" Version="2.1.0-beta4" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.4.1" />
     <PackageReference Include="System.Net.Http.Formatting" Version="4.0.20710.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\VisitorTrack.EntityManager\VisitorTrack.EntityManager.fsproj" />
   </ItemGroup>
 
   <ItemGroup>

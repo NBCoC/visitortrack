@@ -7,9 +7,8 @@ open System.Net.Http
 open Newtonsoft.Json
 open Microsoft.Azure.WebJobs
 open Microsoft.Azure.WebJobs.Host
-open VisitorTrack.EntityManager
-open VisitorTrack.EntityManager.Dtos
-open VisitorTrack.EntityManager.DataTypes
+open AzureFunctions.Dtos
+open AzureFunctions.DataTypes
 
 module CreateUser =
 

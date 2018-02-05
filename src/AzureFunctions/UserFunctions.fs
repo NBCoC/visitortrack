@@ -1,10 +1,8 @@
 ﻿namespace AzureFunctions
 
 open System
-//open System.Configuration
 open System.Net
 open System.Net.Http
-open Newtonsoft.Json
 open Microsoft.Azure.WebJobs
 open Microsoft.Azure.WebJobs.Host
 open AzureFunctions.Dtos

@@ -1,4 +1,4 @@
-namespace AzureFunctions
+namespace VisitorTrack.Entities
 
 open Newtonsoft.Json
 open Newtonsoft.Json.Serialization

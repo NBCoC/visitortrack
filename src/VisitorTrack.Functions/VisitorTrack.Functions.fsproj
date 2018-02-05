@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <AssemblyName>AzureFunctions</AssemblyName>
-    <Version>0.1.0-beta-101</Version>
+    <AssemblyName>VisitorTrack.Functions</AssemblyName>
+    <Version>0.1.0-beta-102</Version>
     <TargetFramework>net461</TargetFramework>
     <Optimize>True</Optimize>
     <OutputType>Library</OutputType>
@@ -10,21 +10,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="ComputationExpressions.fs" />
-    <Compile Include="ResultExtensions.fs" />
-    <Compile Include="PrimitiveTypes.fs" />
-    <Compile Include="DomainTypes.fs" />
-    <Compile Include="Utilities.fs" />
-    <Compile Include="EntityManagers.fs" />
     <Compile Include="Common.fs" />
     <Compile Include="UserFunctions.fs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.3" />
-    <PackageReference Include="Microsoft.Azure.DocumentDB" Version="1.19.1" />
-    <PackageReference Include="Microsoft.Azure.WebJobs" Version="2.1.0" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="2.1.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -41,6 +28,15 @@
     <Content Include="DeleteUser\function.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VisitorTrack.Entities\VisitorTrack.Entities.fsproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.3" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions" Version="2.1.0" />
   </ItemGroup>
 
 </Project>

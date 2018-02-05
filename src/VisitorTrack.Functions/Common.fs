@@ -1,8 +1,7 @@
-namespace AzureFunctions
+namespace VisitorTrack.Functions
 
 open System
-//open System.Configuration
-open AzureFunctions.DataTypes
+open VisitorTrack.Entities.DataTypes
 open System.Collections.Generic
 open System.Net.Http
 open Newtonsoft.Json

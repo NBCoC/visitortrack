@@ -1,4 +1,4 @@
-namespace AzureFunctions
+namespace VisitorTrack.Entities
 
 open System
 open Microsoft.Azure.Documents

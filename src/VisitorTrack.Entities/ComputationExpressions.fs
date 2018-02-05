@@ -1,4 +1,4 @@
-namespace AzureFunctions
+namespace VisitorTrack.Entities
 
 module ComputationExpressions =
 

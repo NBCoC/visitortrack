@@ -1,11 +1,12 @@
-﻿namespace AzureFunctions
+﻿namespace VisitorTrack.Functions
 
 open System
 open System.Net
 open System.Net.Http
 open Microsoft.Azure.WebJobs.Host
-open AzureFunctions.Dtos
-open AzureFunctions.DataTypes
+open VisitorTrack.Entities
+open VisitorTrack.Entities.Dtos
+open VisitorTrack.Entities.DataTypes
 
 module CreateUser =
 

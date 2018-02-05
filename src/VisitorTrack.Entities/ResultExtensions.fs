@@ -1,4 +1,4 @@
-namespace AzureFunctions
+namespace VisitorTrack.Entities
 
 [<RequireQualifiedAccess>]
 module Result =

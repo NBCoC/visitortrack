@@ -80,8 +80,7 @@ module BaseManager =
         let id = DatabaseId.value databaseId
         let ok _ = client
 
-        client.CreateDatabaseIfNotExistsAsync(Database(Id = id))
-        |> taskToResult ok
+        client.CreateDatabaseIfNotExistsAsync(Database(Id = id)) |> taskToResult ok
 
     let createCollection connection =
         let (client: DocumentClient, databaseId, collectionId) = connection
@@ -99,8 +98,7 @@ module BaseManager =
         let uri = getCollectionUri databaseId collectionId
         let ok (response: ResourceResponse<Document>) = response.Resource.Id |> EntityId
 
-        client.CreateDocumentAsync(uri, entity)
-        |> taskToResult ok
+        client.CreateDocumentAsync(uri, entity) |> taskToResult ok
 
     let deleteEntity entityId connection = result {
         let (client: DocumentClient, databaseId, collectionId) = connection

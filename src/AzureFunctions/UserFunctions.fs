@@ -3,15 +3,13 @@
 open System
 open System.Net
 open System.Net.Http
-open Microsoft.Azure.WebJobs
 open Microsoft.Azure.WebJobs.Host
 open AzureFunctions.Dtos
 open AzureFunctions.DataTypes
 
 module CreateUser =
 
-    [<FunctionName("CreateUser")>]
-    let Run([<HttpTrigger>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run(req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing CreateUser func...")
 
@@ -38,8 +36,7 @@ module CreateUser =
 
 module DeleteUser =
 
-    [<FunctionName("DeleteUser")>]
-    let Run([<HttpTrigger>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run(req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing DeleteUser func...")
 

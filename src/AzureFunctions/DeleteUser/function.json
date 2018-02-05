@@ -1,0 +1,15 @@
+{
+  "bindings": [
+    {
+      "authLevel": "function",
+      "name": "req",
+      "type": "httpTrigger",
+      "methods": [
+        "get"
+      ]
+    }
+  ],
+  "disabled": false,
+  "scriptFile": "../bin/AzureFunctions.dll",
+  "entryPoint": "AzureFunctions.DeleteUser.Run"
+}

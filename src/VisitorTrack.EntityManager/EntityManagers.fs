@@ -145,7 +145,7 @@ module UserManager =
 
         let create = result {
             let! displayName = String75.create "Display Name" dto.DisplayName
-            let! emailAddress = EmailAddress.create dto.Email
+            let! emailAddress = EmailAddress.create dto.EmailAddress
             let! (DefaultPassword validPsw) = validateDefaultPassword defaultPassword
             let! password = validPsw |> HashProvider.hash 
             let role = canonicalizeRole dto.RoleId
@@ -154,7 +154,7 @@ module UserManager =
             let entity = {
                 Id = ""
                 DisplayName = String75.value displayName
-                Email = EmailAddress.value emailAddress
+                EmailAddress = EmailAddress.value emailAddress
                 Password = getPasswordValue password
                 RoleId = getRoleId role
             }

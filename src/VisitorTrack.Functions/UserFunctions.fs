@@ -3,14 +3,17 @@
 open System
 open System.Net
 open System.Net.Http
+open Microsoft.Azure.WebJobs
 open Microsoft.Azure.WebJobs.Host
+open Microsoft.Azure.WebJobs.Extensions.Http
 open VisitorTrack.EntityManager
 open VisitorTrack.EntityManager.Dtos
 open VisitorTrack.EntityManager.DataTypes
 
 module CreateUser =
 
-    let Run(req: HttpRequestMessage, log: TraceWriter) = 
+    [<FunctionName("CreateUserHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Function, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing CreateUser func...")
 
@@ -31,7 +34,8 @@ module CreateUser =
 
 module DeleteUser =
 
-    let Run(req: HttpRequestMessage, log: TraceWriter) = 
+    [<FunctionName("DeleteUserHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Function, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing DeleteUser func...")
 
@@ -50,7 +54,8 @@ module DeleteUser =
 
 module GetUser =
 
-    let Run(req: HttpRequestMessage, log: TraceWriter) = 
+    [<FunctionName("GetUserHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Function, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing GetUser func...")
 

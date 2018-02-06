@@ -8,7 +8,7 @@ module Entities =
     type User = {
         [<JsonProperty(PropertyName="id")>] 
         Id: string
-        Email: string
+        EmailAddress: string
         DisplayName: string
         RoleId: int
         Password: string
@@ -20,8 +20,8 @@ module Dtos =
     type UserDto = {
         [<field: DataMember(Name="id")>] 
         Id: string
-        [<field: DataMember(Name="email")>] 
-        Email: string
+        [<field: DataMember(Name="emailAddress")>] 
+        EmailAddress: string
         [<field: DataMember(Name="displayName")>] 
         DisplayName: string
         [<field: DataMember(Name="roleId")>] 
@@ -36,8 +36,8 @@ module Dtos =
 
     [<DataContract>]
     type UpsertUserDto = {
-        [<field: DataMember(Name="email")>] 
-        Email: string
+        [<field: DataMember(Name="emailAddress")>] 
+        EmailAddress: string
         [<field: DataMember(Name="displayName")>] 
         DisplayName: string
         [<field: DataMember(Name="roleId")>] 

@@ -26,19 +26,18 @@ module BaseManager =
         else (EntityId entityId) |> Result.Ok
 
     let createDatabase databaseId (client: DocumentClient) =
-        let id = DatabaseId.value databaseId
+        let database = Database(Id = DatabaseId.value databaseId)
         let ok _ = ()
 
-        client.CreateDatabaseIfNotExistsAsync(Database(Id = id)) |> taskToResult ok
+        client.CreateDatabaseIfNotExistsAsync(database) 
+        |> taskToResult ok
 
-    let createCollection connection =
-        let (client: DocumentClient, databaseId, collectionId) = connection
-
-        let id = DatabaseId.value databaseId
-        let col = CollectionId.value collectionId
+    let createCollection (client: DocumentClient, databaseId, collectionId) =
+        let uri = UriFactory.CreateDatabaseUri(DatabaseId.value databaseId)
+        let collection = DocumentCollection(Id = CollectionId.value collectionId)
         let ok _ = ()
 
-        client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(id), DocumentCollection(Id = col))
+        client.CreateDocumentCollectionIfNotExistsAsync(uri, collection)
         |> taskToResult ok
 
     let getConnection (opts: StorageOptions) = result {
@@ -97,27 +96,21 @@ module BaseManager =
         return UriFactory.CreateDocumentUri(database, collection, id)
     }
         
-
-    let createEntity entity connection =
-        let (client: DocumentClient, databaseId, collectionId) = connection
-
+    let createEntity entity (client: DocumentClient, databaseId, collectionId) =
         let uri = getCollectionUri databaseId collectionId
         let ok (response: ResourceResponse<Document>) = response.Resource.Id |> EntityId
 
-        client.CreateDocumentAsync(uri, entity) |> taskToResult ok
+        client.CreateDocumentAsync(uri, entity) 
+        |> taskToResult ok
 
-    let deleteEntity entityId connection = result {
-        let (client: DocumentClient, databaseId, collectionId) = connection
-
+    let deleteEntity entityId (client: DocumentClient, databaseId, collectionId) = result {
         let! uri = getDocumentUri databaseId collectionId entityId
         let ok _ = ()
 
         return! client.DeleteDocumentAsync(uri) |> taskToResult ok
     }
 
-    let findEntity<'Dto> entityId connection = result {
-        let (client: DocumentClient, databaseId, collectionId) = connection
-
+    let findEntity<'Dto> entityId (client: DocumentClient, databaseId, collectionId) = result {
         let! uri = getDocumentUri databaseId collectionId entityId
         let ok (response: DocumentResponse<'Dto>) = response.Document
 
@@ -148,8 +141,7 @@ module UserManager =
 
     let getPasswordValue (HashedPassword x) = x
 
-    let create (opts: StorageOptions) (request: ICreateUser) =
-        let (defaultPassword, dto: UpsertUserDto) = request
+    let create (opts: StorageOptions) (defaultPassword, dto: UpsertUserDto) =
 
         let create = result {
             let! displayName = String75.create "Display Name" dto.DisplayName

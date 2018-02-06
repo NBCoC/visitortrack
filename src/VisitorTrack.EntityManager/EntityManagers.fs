@@ -1,10 +1,11 @@
-namespace VisitorTrack.Entities
+namespace VisitorTrack.EntityManager
 
 open System
 open Microsoft.Azure.Documents
 open Microsoft.Azure.Documents.Client
 open ComputationExpressions
 open Entities
+open Dtos
 open DataTypes
 
 module BaseManager =
@@ -23,6 +24,22 @@ module BaseManager =
         if String.IsNullOrEmpty(entityId) then
             Result.Error "Entity ID is required"
         else (EntityId entityId) |> Result.Ok
+
+    let createDatabase databaseId (client: DocumentClient) =
+        let id = DatabaseId.value databaseId
+        let ok _ = ()
+
+        client.CreateDatabaseIfNotExistsAsync(Database(Id = id)) |> taskToResult ok
+
+    let createCollection connection =
+        let (client: DocumentClient, databaseId, collectionId) = connection
+
+        let id = DatabaseId.value databaseId
+        let col = CollectionId.value collectionId
+        let ok _ = ()
+
+        client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(id), DocumentCollection(Id = col))
+        |> taskToResult ok
 
     let getConnection (opts: StorageOptions) = result {
 
@@ -53,7 +70,12 @@ module BaseManager =
             validateCredentials opts.EndpointUrl opts.AccountKey
             |> Result.map getClient
 
-        return client, databaseId, collectionId
+        let connection = client, databaseId, collectionId
+
+        do! createDatabase databaseId client
+        do! createCollection connection
+
+        return connection
     }
 
     let closeConnection (connection, x) =
@@ -76,22 +98,6 @@ module BaseManager =
     }
         
 
-    let createDatabase databaseId (client: DocumentClient) =
-        let id = DatabaseId.value databaseId
-        let ok _ = client
-
-        client.CreateDatabaseIfNotExistsAsync(Database(Id = id)) |> taskToResult ok
-
-    let createCollection connection =
-        let (client: DocumentClient, databaseId, collectionId) = connection
-
-        let id = DatabaseId.value databaseId
-        let col = CollectionId.value collectionId
-        let ok _ = connection
-
-        client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(id), DocumentCollection(Id = col))
-        |> taskToResult ok
-
     let createEntity entity connection =
         let (client: DocumentClient, databaseId, collectionId) = connection
 
@@ -107,6 +113,15 @@ module BaseManager =
         let ok _ = ()
 
         return! client.DeleteDocumentAsync(uri) |> taskToResult ok
+    }
+
+    let findEntity<'Dto> entityId connection = result {
+        let (client: DocumentClient, databaseId, collectionId) = connection
+
+        let! uri = getDocumentUri databaseId collectionId entityId
+        let ok (response: DocumentResponse<'Dto>) = response.Document
+
+        return! client.ReadDocumentAsync<'Dto>(uri) |> taskToResult ok
     }
 
 [<RequireQualifiedAccess>]
@@ -125,25 +140,31 @@ module UserManager =
         | Editor -> 2
         | Viewer -> 3
 
+    let validateDefaultPassword (DefaultPassword password) =
+        let getValue value = String15.value value |> DefaultPassword
+
+        String15.create "Default Password" password
+        |> Result.map getValue
+
     let getPasswordValue (HashedPassword x) = x
 
     let create (opts: StorageOptions) (request: ICreateUser) =
-        let (DefaultPassword defaultPassword, dto) = request
+        let (defaultPassword, dto: UpsertUserDto) = request
 
         let create = result {
             let! displayName = String75.create "Display Name" dto.DisplayName
             let! emailAddress = EmailAddress.create dto.Email
-            let! password = defaultPassword |> HashProvider.hash 
+            let! (DefaultPassword validPsw) = validateDefaultPassword defaultPassword
+            let! password = validPsw |> HashProvider.hash 
             let role = canonicalizeRole dto.RoleId
             let! connection = getConnection opts
 
             let entity = {
-                id = ""
-                token = ""
-                displayName = String75.value displayName
-                email = EmailAddress.value emailAddress
-                password = getPasswordValue password
-                roleId = getRoleId role
+                Id = ""
+                DisplayName = String75.value displayName
+                Email = EmailAddress.value emailAddress
+                Password = getPasswordValue password
+                RoleId = getRoleId role
             }
 
             let! entityId = createEntity entity connection
@@ -163,3 +184,14 @@ module UserManager =
         }
 
         delete |> Result.map closeConnection
+
+    let find (opts: StorageOptions) entityId =
+
+        let get = result {
+            let! connection = getConnection opts
+            let! data = findEntity<Dtos.UserDto> entityId connection
+
+            return (connection, data)
+        }
+
+        get |> Result.map closeConnection

@@ -1,17 +1,9 @@
-namespace VisitorTrack.Entities
+namespace VisitorTrack.EntityManager
 
-open Newtonsoft.Json
-open Newtonsoft.Json.Serialization
 open System.Security.Cryptography
 open System.Text
 open System
 open DataTypes
-
-[<RequireQualifiedAccess>]
-module EntityHelper =
-
-    let serialize entity =
-        JsonConvert.SerializeObject(entity, JsonSerializerSettings(ContractResolver = CamelCasePropertyNamesContractResolver()))
 
 module HashProvider =
 

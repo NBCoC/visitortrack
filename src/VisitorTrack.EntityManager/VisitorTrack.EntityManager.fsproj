@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-	  <AssemblyName>VisitorTrack.Entities</AssemblyName>
+	  <AssemblyName>VisitorTrack.EntityManager</AssemblyName>
     <Version>0.1.0-beta-102</Version>
     <TargetFramework>net461</TargetFramework>
 	  <Optimize>True</Optimize>
@@ -16,10 +16,11 @@
   <ItemGroup>
     <Compile Include="ComputationExpressions.fs" />
     <Compile Include="ResultExtensions.fs" />
+    <Compile Include="Entities.fs" />
     <Compile Include="PrimitiveTypes.fs" />
     <Compile Include="DomainTypes.fs" />
     <Compile Include="Utilities.fs" />
     <Compile Include="EntityManagers.fs" />
   </ItemGroup>
-
+  
 </Project>

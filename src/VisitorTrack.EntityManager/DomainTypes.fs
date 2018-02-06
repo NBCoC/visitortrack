@@ -1,27 +1,8 @@
-namespace VisitorTrack.Entities
+namespace VisitorTrack.EntityManager
 
-module Entities =
-
-    [<CLIMutable>]
-    type User = {
-        id: string
-        email: string
-        password: string
-        token: string
-        displayName: string
-        roleId: int
-    } 
-
-module Dtos =
-
-    type UpsertUserDto = {
-        Email: string
-        DisplayName: string
-        RoleId: int
-    }
+open Dtos
 
 module DataTypes =
-    open Dtos
 
     type DefaultPassword = DefaultPassword of string
 

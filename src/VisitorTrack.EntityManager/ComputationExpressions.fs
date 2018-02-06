@@ -1,4 +1,4 @@
-namespace VisitorTrack.Entities
+namespace VisitorTrack.EntityManager
 
 module ComputationExpressions =
 

@@ -1,7 +1,7 @@
 namespace VisitorTrack.Functions
 
 open System
-open VisitorTrack.Entities.DataTypes
+open VisitorTrack.EntityManager.DataTypes
 open System.Collections.Generic
 open System.Net.Http
 open Newtonsoft.Json

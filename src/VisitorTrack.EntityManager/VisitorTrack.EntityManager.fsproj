@@ -2,7 +2,7 @@
 
   <PropertyGroup>
 	  <AssemblyName>VisitorTrack.EntityManager</AssemblyName>
-    <Version>0.1.0-beta-102</Version>
+    <Version>0.1.0-beta-103</Version>
     <TargetFramework>net461</TargetFramework>
 	  <Optimize>True</Optimize>
     <OutputType>Library</OutputType>
@@ -14,13 +14,15 @@
   </ItemGroup>
   
   <ItemGroup>
-    <Compile Include="ComputationExpressions.fs" />
     <Compile Include="ResultExtensions.fs" />
-    <Compile Include="Entities.fs" />
     <Compile Include="PrimitiveTypes.fs" />
     <Compile Include="DomainTypes.fs" />
     <Compile Include="Utilities.fs" />
     <Compile Include="EntityManagers.fs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\VisitorTrack.Entities\VisitorTrack.Entities.csproj" />
   </ItemGroup>
   
 </Project>

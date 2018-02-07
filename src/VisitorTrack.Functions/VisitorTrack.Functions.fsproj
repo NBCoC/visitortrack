@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <AssemblyName>VisitorTrack.Functions</AssemblyName>
-    <Version>0.1.0-beta-102</Version>
+    <Version>0.1.0-beta-103</Version>
     <TargetFramework>net461</TargetFramework>
     <Optimize>True</Optimize>
     <OutputType>Library</OutputType>

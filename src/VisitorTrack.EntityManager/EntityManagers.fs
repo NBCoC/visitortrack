@@ -11,8 +11,10 @@ open DataTypes
 module BaseManager =
 
     let taskToResult ok task =
-        let error (ex: exn) =
-            ex.ToString()
+        let error (ex: exn) = {
+            Message = ex.GetInnerMessage ()
+            Details = ex.ToString() |> Some
+        }
 
         Async.AwaitTask task
         |> Async.Catch
@@ -86,7 +88,7 @@ module BaseManager =
         let validateEntityId entityId =
             let (EntityId id) = entityId
             if String.IsNullOrEmpty(id) then
-                Result.Error "Entity ID is required"
+                ErrorResult.Create "Entity ID is required" |> Result.Error
             else Result.Ok entityId
 
         let database = DatabaseId.value databaseId
@@ -140,6 +142,33 @@ module UserManager =
         |> Result.map getValue
 
     let getHashedPasswordValue (HashedPassword x) = x
+
+    let authenticate (opts: StorageOptions) (dto: AuthenticateUserDto) =
+
+        let execute = result {
+            let! emailAddress = EmailAddress.create dto.EmailAddress
+            let! password = String15.create "Password" dto.Password
+            let! connection = getConnection opts
+            let (client: DocumentClient, databaseId, collectionId) = connection
+            let uri = getCollectionUri databaseId collectionId
+            let email = EmailAddress.value emailAddress
+            let! psw = String15.value password |> HashProvider.hash
+
+            let sql = 
+                sprintf "SELECT * FROM UserCollection WHERE UserCollection.EmailAddress = '%s' AND UserCollection.Password = '%s'"  
+                    email (getHashedPasswordValue psw)
+
+            let! data = 
+                client.CreateDocumentQuery<User>(uri, sql).ToArray()
+                |> Array.tryHead
+                |> Option.map (fun u -> u.Token)
+                |> Result.ofOption (sprintf "User with email address of %s not found or password is incorrect" email)
+                |> Result.mapError ErrorResult.Create
+
+            return (connection, data)
+        }
+
+        execute |> Result.map closeConnection
 
     let getAll (opts: StorageOptions) =
 
@@ -202,15 +231,17 @@ module UserManager =
             let! displayName = String75.create "Display Name" dto.DisplayName
             let! emailAddress = EmailAddress.create dto.EmailAddress
             let! (DefaultPassword validPsw) = validateDefaultPassword defaultPassword
-            let! password = validPsw |> HashProvider.hash 
+            let! password = validPsw |> HashProvider.hash
             let! connection = getConnection opts
+            let generateToken () = System.Guid.NewGuid().ToString()
 
             let entity = 
                 User (
                     DisplayName = String75.value displayName,
                     EmailAddress = EmailAddress.value emailAddress,
                     Password = getHashedPasswordValue password,
-                    RoleId = canonicalizeRole dto.RoleId
+                    RoleId = canonicalizeRole dto.RoleId,
+                    Token = generateToken ()
                 )
 
             let! entityId = createEntity entity connection

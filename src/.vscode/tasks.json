@@ -1,0 +1,29 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build Entities",
+            "type": "shell",
+            "windows": {
+                "command": "dotnet build .\\VisitorTrack.Entities\\VisitorTrack.Entities.csproj"
+            }
+        },
+        {
+            "label": "Build Entity Manager",
+            "type": "shell",
+            "windows": {
+                "command": "dotnet build .\\VisitorTrack.EntityManager\\VisitorTrack.EntityManager.fsproj"
+            }
+        },
+        {
+            "label": "Build Functions",
+            "type": "shell",
+            "windows": {
+                "command": "dotnet build .\\VisitorTrack.Functions\\VisitorTrack.Functions.fsproj"
+            },
+            "problemMatcher": []
+        }
+    ]
+}

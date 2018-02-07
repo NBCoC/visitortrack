@@ -4,7 +4,9 @@ open System
 open VisitorTrack.EntityManager.DataTypes
 open System.Collections.Generic
 open System.Net.Http
+open System.Net
 open Newtonsoft.Json
+open Microsoft.Azure.WebJobs.Host
 
 [<RequireQualifiedAccess>]
 module Constants =
@@ -51,3 +53,10 @@ module Extensions =
 
             return result
         }
+
+        member this.CreateErrorResultResponse (result: ErrorResult, log: TraceWriter) =
+            match result.Details with
+            | None -> ()
+            | Some message -> log.Error(message)
+
+            this.CreateResponse(HttpStatusCode.BadRequest, result.Message)

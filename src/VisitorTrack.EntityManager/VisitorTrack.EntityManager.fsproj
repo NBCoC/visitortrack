@@ -15,7 +15,6 @@
   
   <ItemGroup>
     <Compile Include="ResultExtensions.fs" />
-    <Compile Include="PrimitiveTypes.fs" />
     <Compile Include="DomainTypes.fs" />
     <Compile Include="Utilities.fs" />
     <Compile Include="EntityManagers.fs" />

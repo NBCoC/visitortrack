@@ -93,3 +93,20 @@ module GetUser =
                 |> Result.either ok error
                     
         } |> Async.RunSynchronously
+
+module GetAllUsers =
+
+    [<FunctionName("GetAllUsersHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Function, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+        async {
+            log.Info(sprintf "Executing GetAllUsers func...")
+
+            let storageOptions = Settings.getStorageOptions "UserCollection"
+            let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+            return 
+                UserManager.getAll storageOptions
+                |> Result.either ok error
+                    
+        } |> Async.RunSynchronously

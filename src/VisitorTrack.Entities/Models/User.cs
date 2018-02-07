@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace VisitorTrack.Entities.Models
 {
-    public class User 
+    public class User : IEntity
     {
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }  

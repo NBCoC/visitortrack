@@ -1,6 +1,7 @@
 namespace VisitorTrack.EntityManager
 
 open System
+open System.Linq
 open Microsoft.Azure.Documents
 open Microsoft.Azure.Documents.Client
 open VisitorTrack.Entities.Models
@@ -115,7 +116,7 @@ module BaseManager =
         return! client.ReadDocumentAsync<'Dto>(uri) |> taskToResult ok
     }
 
-    let replaceEntity entityId (entity: 'Entity) (client: DocumentClient, databaseId, collectionId) = result {
+    let replaceEntity entityId (entity: #IEntity) (client: DocumentClient, databaseId, collectionId) = result {
         let! uri = getDocumentUri databaseId collectionId entityId
         let ok _ = ()
 
@@ -139,6 +140,19 @@ module UserManager =
         |> Result.map getValue
 
     let getHashedPasswordValue (HashedPassword x) = x
+
+    let getAll (opts: StorageOptions) =
+
+        let get = result {
+            let! connection = getConnection opts
+            let (client: DocumentClient, databaseId, collectionId) = connection
+            let uri = getCollectionUri databaseId collectionId
+            let dtos = client.CreateDocumentQuery<UserDto>(uri).ToArray()
+
+            return (connection, dtos)
+        }
+        
+        get |> Result.map closeConnection
 
     let delete (opts: StorageOptions) entityId =
 

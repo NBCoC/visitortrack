@@ -15,15 +15,11 @@ module Constants =
 [<RequireQualifiedAccess>]
 module Settings =
 
-    let private accountKey = Environment.GetEnvironmentVariable("DbAccountKey")
-    let private endpointUrl = Environment.GetEnvironmentVariable("DbEndpointUri")
-    let private databaseId = Environment.GetEnvironmentVariable("DbName")
-
     let getStorageOptions collectionId = {
-        AccountKey = accountKey
-        EndpointUrl = endpointUrl
+        AccountKey = Environment.GetEnvironmentVariable("DbAccountKey")
+        EndpointUrl = Environment.GetEnvironmentVariable("DbEndpointUrl")
+        DatabaseId = Environment.GetEnvironmentVariable("DbName")
         CollectionId = collectionId
-        DatabaseId = databaseId
     }
 
 [<AutoOpen>]

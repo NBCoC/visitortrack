@@ -20,7 +20,7 @@ module BaseManager =
         |> Result.ofChoice
         |> Result.doubleMap ok error
 
-    let getCollectionUri databaseId collectionId =
+    let getDocumentCollectionUri databaseId collectionId =
         let database = DatabaseId.value databaseId
         let collection = CollectionId.value collectionId
 
@@ -41,6 +41,12 @@ module BaseManager =
         return UriFactory.CreateDocumentUri(database, collection, id)
     }
 
+    let userConstraints () =
+        Collections.ObjectModel.Collection<UniqueKey>[| 
+                UniqueKey ( Paths = Collections.ObjectModel.Collection<string>[| "/emailAddress" |]); 
+                UniqueKey ( Paths = Collections.ObjectModel.Collection<string>[| "/token" |]) 
+            |]
+
     let executeTask (opts: StorageOptions) task = result {
         let! endpointUrl = EndpointUrl.create opts.EndpointUrl
         let! accountKey = AccountKey.create opts.AccountKey
@@ -49,23 +55,22 @@ module BaseManager =
         let ok _ = ()
 
         let createDatabase (client: DocumentClient) databaseId =
-            let id = DatabaseId.value databaseId
-            let database = Database(Id = id)
+            let database = Database(Id = DatabaseId.value databaseId)
             
             client.CreateDatabaseIfNotExistsAsync(database) |> taskToResult ok
 
         let createCollection (client: DocumentClient) databaseId collectionId =
-            let db = DatabaseId.value databaseId
-            let col = CollectionId.value collectionId
-            let uri = UriFactory.CreateDatabaseUri(db)
-            let collection = DocumentCollection(Id = col)
+            let uri = UriFactory.CreateDatabaseUri(DatabaseId.value databaseId)
+            let collection = DocumentCollection(Id = CollectionId.value collectionId)
 
-            client.CreateDocumentCollectionIfNotExistsAsync(uri, collection) |> taskToResult ok
+            collection.PartitionKey.Paths.Add("/pk")
+            collection.UniqueKeyPolicy <- UniqueKeyPolicy (UniqueKeys = userConstraints ())
 
-        let uri = Uri(EndpointUrl.value endpointUrl)
-        let key = AccountKey.value accountKey
+            let options = RequestOptions (OfferThroughput = Nullable<int>(2500) )
 
-        use client = new DocumentClient(uri, key)
+            client.CreateDocumentCollectionIfNotExistsAsync(uri, collection, options) |> taskToResult ok
+
+        use client = new DocumentClient(Uri(EndpointUrl.value endpointUrl), AccountKey.value accountKey)
 
         do! createDatabase client databaseId
         do! createCollection client databaseId collectionId
@@ -74,7 +79,7 @@ module BaseManager =
     }
 
     let create entity (client: DocumentClient) databaseId collectionId =
-        let uri = getCollectionUri databaseId collectionId
+        let uri = getDocumentCollectionUri databaseId collectionId
         let ok (response: ResourceResponse<Document>) = response.Resource.Id |> EntityId
 
         client.CreateDocumentAsync(uri, entity) |> taskToResult ok
@@ -131,7 +136,7 @@ module UserManager =
             let! emailAddress = EmailAddress.create dto.EmailAddress
             let! password = String15.create "Password" dto.Password
             
-            let uri = BaseManager.getCollectionUri databaseId collectionId
+            let uri = BaseManager.getDocumentCollectionUri databaseId collectionId
             let email = EmailAddress.value emailAddress
             let! hashedPassword = String15.value password |> HashProvider.hash
             let psw = getHashedPasswordValue hashedPassword
@@ -161,7 +166,7 @@ module UserManager =
     let getAll (opts: StorageOptions) =
 
         let task (client: DocumentClient) databaseId collectionId = result {
-            let uri = BaseManager.getCollectionUri databaseId collectionId
+            let uri = BaseManager.getDocumentCollectionUri databaseId collectionId
             return client.CreateDocumentQuery<UserDto>(uri).ToArray()
         }
         

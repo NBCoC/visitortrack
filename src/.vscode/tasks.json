@@ -8,7 +8,8 @@
             "type": "shell",
             "windows": {
                 "command": "dotnet build .\\VisitorTrack.Entities\\VisitorTrack.Entities.csproj"
-            }
+            },
+            "problemMatcher": []
         },
         {
             "label": "Build Entity Manager",

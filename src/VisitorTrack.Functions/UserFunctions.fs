@@ -27,7 +27,7 @@ module UpdateUser =
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return
-                Result.ofOption "User DTO payload is required" dto
+                Result.ofOption "DTO payload is required" dto
                 |> Result.bind (UserManager.update storageOptions entityId)
                 |> Result.either ok error
         } |> Async.RunSynchronously
@@ -48,7 +48,7 @@ module CreateUser =
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return
-                Result.ofOption "User DTO payload is required" dto
+                Result.ofOption "DTO payload is required" dto
                 |> Result.bind (UserManager.create storageOptions password)
                 |> Result.either ok error
         } |> Async.RunSynchronously
@@ -68,7 +68,7 @@ module DeleteUser =
                 req.TryGetQueryStringValue "id" 
                 |> Option.map EntityId
                 |> Result.ofOption "User ID is required (?id=<userid>)"
-                |> Result.bind (UserManager.delete storageOptions)
+                |> Result.bind (BaseManager.delete storageOptions)
                 |> Result.either ok error
                     
         } |> Async.RunSynchronously
@@ -88,7 +88,7 @@ module GetUser =
                 req.TryGetQueryStringValue "id" 
                 |> Option.map EntityId
                 |> Result.ofOption "User ID is required (?id=<userid>)"
-                |> Result.bind (UserManager.find storageOptions)
+                |> Result.bind (BaseManager.find<UserDto> storageOptions)
                 |> Result.either ok error
                     
         } |> Async.RunSynchronously
@@ -108,4 +108,23 @@ module GetAllUsers =
                 UserManager.getAll storageOptions
                 |> Result.either ok error
                     
+        } |> Async.RunSynchronously
+
+module AuthenticateUser =
+
+    [<FunctionName("AuthenticateUserHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Function, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
+        async {
+            log.Info(sprintf "Executing AuthenticateUser func...")
+
+            let storageOptions = Settings.getStorageOptions "UserCollection"
+            let! dto = req.GetDto<AuthenticateUserDto>()
+
+            let ok dto = req.CreateResponse(HttpStatusCode.OK, dto)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+            return
+                Result.ofOption "DTO payload is required" dto
+                |> Result.bind (UserManager.authenticate storageOptions)
+                |> Result.either ok error
         } |> Async.RunSynchronously

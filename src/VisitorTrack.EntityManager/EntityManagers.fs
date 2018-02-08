@@ -8,6 +8,7 @@ open VisitorTrack.Entities.Models
 open VisitorTrack.Entities.Dtos
 open DataTypes
 
+[<RequireQualifiedAccess>]
 module BaseManager =
 
     let taskToResult ok task =
@@ -72,27 +73,35 @@ module BaseManager =
         return! task client databaseId collectionId
     }
 
-    let createEntity entity (client: DocumentClient) databaseId collectionId =
+    let create entity (client: DocumentClient) databaseId collectionId =
         let uri = getCollectionUri databaseId collectionId
         let ok (response: ResourceResponse<Document>) = response.Resource.Id |> EntityId
 
         client.CreateDocumentAsync(uri, entity) |> taskToResult ok
 
-    let deleteEntity entityId (client: DocumentClient) databaseId collectionId = result {
-        let! uri = getDocumentUri databaseId collectionId entityId
-        let ok _ = ()
+    let delete (opts: StorageOptions) entityId =
 
-        return! client.DeleteDocumentAsync(uri) |> taskToResult ok
-    }
+        let task (client: DocumentClient) databaseId collectionId = result {
+            let! uri = getDocumentUri databaseId collectionId entityId
+            let ok _ = ()
 
-    let findEntity<'Dto> entityId (client: DocumentClient) databaseId collectionId = result {
-        let! uri = getDocumentUri databaseId collectionId entityId
-        let ok (response: DocumentResponse<'Dto>) = response.Document
+            return! client.DeleteDocumentAsync(uri) |> taskToResult ok
+        }
 
-        return! client.ReadDocumentAsync<'Dto>(uri) |> taskToResult ok
-    }
+        executeTask opts task
 
-    let replaceEntity entityId (entity: #IEntity) (client: DocumentClient) databaseId collectionId = result {
+    let find<'T> (opts: StorageOptions) entityId =
+
+        let task (client: DocumentClient) databaseId collectionId = result {
+            let! uri = getDocumentUri databaseId collectionId entityId
+            let ok (response: DocumentResponse<'T>) = response.Document
+
+            return! client.ReadDocumentAsync<'T>(uri) |> taskToResult ok
+        }
+
+        executeTask opts task
+
+    let replace entityId (entity: #IEntity) (client: DocumentClient) databaseId collectionId = result {
         let! uri = getDocumentUri databaseId collectionId entityId
         let ok _ = ()
 
@@ -101,7 +110,6 @@ module BaseManager =
 
 [<RequireQualifiedAccess>]
 module UserManager =
-    open BaseManager
 
     let canonicalizeRole role =
         match role with
@@ -123,47 +131,41 @@ module UserManager =
             let! emailAddress = EmailAddress.create dto.EmailAddress
             let! password = String15.create "Password" dto.Password
             
-            let uri = getCollectionUri databaseId collectionId
+            let uri = BaseManager.getCollectionUri databaseId collectionId
             let email = EmailAddress.value emailAddress
-            let! psw = String15.value password |> HashProvider.hash
+            let! hashedPassword = String15.value password |> HashProvider.hash
+            let psw = getHashedPasswordValue hashedPassword
 
             let sql = 
                 sprintf "SELECT * FROM UserCollection WHERE UserCollection.EmailAddress = '%s' AND UserCollection.Password = '%s'"  
-                    email (getHashedPasswordValue psw)
+                    email psw
+
+            let toDto (user: User) =
+                UserAuthenticatedDto (
+                    Id = user.Id,
+                    DisplayName = user.DisplayName,
+                    EmailAddress = user.EmailAddress,
+                    RoleId = user.RoleId,
+                    Token = user.Token
+                )
 
             return! 
                 client.CreateDocumentQuery<User>(uri, sql).ToArray()
                 |> Array.tryHead
-                |> Option.map (fun user -> user.Token)
-                |> Result.ofOption (sprintf "User with email address of %s not found or password is incorrect" email)
+                |> Option.map toDto
+                |> Result.ofOption (sprintf "User with email address of '%s' not found or password is incorrect" email)
         }
 
-        executeTask opts task
+        BaseManager.executeTask opts task
 
     let getAll (opts: StorageOptions) =
 
         let task (client: DocumentClient) databaseId collectionId = result {
-            let uri = getCollectionUri databaseId collectionId
+            let uri = BaseManager.getCollectionUri databaseId collectionId
             return client.CreateDocumentQuery<UserDto>(uri).ToArray()
         }
         
-        executeTask opts task
-
-    let delete (opts: StorageOptions) entityId =
-
-        let task (client: DocumentClient) databaseId collectionId = result {
-            return! deleteEntity entityId client databaseId collectionId
-        }
-
-        executeTask opts task
-
-    let find (opts: StorageOptions) entityId =
-
-        let task (client: DocumentClient) databaseId collectionId = result {
-            return! findEntity<UserDto> entityId client databaseId collectionId
-        }
-
-        executeTask opts task
+        BaseManager.executeTask opts task
 
     let update (opts: StorageOptions) entityId (dto: UpsertUserDto) =
 
@@ -171,16 +173,16 @@ module UserManager =
             let! displayName = String75.create "Display Name" dto.DisplayName
             let! emailAddress = EmailAddress.create dto.EmailAddress
 
-            let! entity = findEntity<User> entityId client databaseId collectionId
+            let! entity = BaseManager.find<User> opts entityId
             
             entity.DisplayName <- String75.value displayName
             entity.EmailAddress <- EmailAddress.value emailAddress
             entity.RoleId <- canonicalizeRole dto.RoleId
 
-            return! replaceEntity entityId entity client databaseId collectionId
+            return! BaseManager.replace entityId entity client databaseId collectionId
         }
         
-        executeTask opts task
+        BaseManager.executeTask opts task
 
     let create (opts: StorageOptions) defaultPassword (dto: UpsertUserDto) =
 
@@ -200,9 +202,9 @@ module UserManager =
                     Token = generateToken ()
                 )
 
-            return! createEntity entity client databaseId collectionId
+            return! BaseManager.create entity client databaseId collectionId
         }
 
-        executeTask opts task
+        BaseManager.executeTask opts task
 
     

@@ -40,7 +40,20 @@ module ResultBuilder =
 
     type ResultBuilder() =
         member this.Bind(m, f) = Result.bind f m
+        
         member this.Return(m) = Ok m
+
         member this.ReturnFrom(m) = m
+
+        member this.TryFinally(body, compensation) =
+            try this.ReturnFrom(body())
+            finally compensation() 
+
+        member this.Using(disposable: #System.IDisposable, body) =
+            let body' = fun () -> body disposable
+            this.TryFinally(body', fun () -> 
+                match disposable with 
+                    | null -> () 
+                    | disp -> disp.Dispose())
 
     let result = ResultBuilder()

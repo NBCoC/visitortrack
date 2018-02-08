@@ -9,7 +9,7 @@ module HashProvider =
 
     let hash str =
         if String.IsNullOrEmpty(str) then
-            ErrorResult.Create "Value is required for hashing" |> Error
+            Error "Value is required for hashing"
         else
             let postSalt = "_buffer_9#00!#8423-12834)*@$920*"
             let preSalt = "visitor_track_salt_"

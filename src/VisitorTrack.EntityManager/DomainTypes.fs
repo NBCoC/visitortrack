@@ -29,22 +29,14 @@ module DataTypes =
         CollectionId: string
     }
 
-    type ErrorResult = {
-        Message: string
-        Details: string option
-    } with static member Create message = {
-            Message = message
-            Details = None
-        }
-
 [<RequireQualifiedAccess>]
 module private StringType =
 
     let create propertyName length dataType value =
         if String.IsNullOrEmpty(value) then
-            sprintf "%s is required" propertyName |> ErrorResult.Create |> Error
+            sprintf "%s is required" propertyName |> Error
         elif value.Length > length then
-            sprintf "%s cannot be longer than %i characters" propertyName length |> ErrorResult.Create |> Error
+            sprintf "%s cannot be longer than %i characters" propertyName length |> Error
         else dataType value |> Ok
 
 module DatabaseId =
@@ -52,7 +44,7 @@ module DatabaseId =
 
     let create str =
         if String.IsNullOrEmpty(str) then
-            ErrorResult.Create "Database ID is required" |> Error
+            Error "Database ID is required"
         else DatabaseId str |> Ok
 
     let value (DatabaseId x) = x
@@ -62,7 +54,7 @@ module EndpointUrl =
 
     let create str =
         if String.IsNullOrEmpty(str) then
-            ErrorResult.Create "Endpoint URL is required" |> Error
+            Error "Endpoint URL is required"
         else EndpointUrl str |> Ok
 
     let value (EndpointUrl x) = x
@@ -72,7 +64,7 @@ module AccountKey =
 
     let create str =
         if String.IsNullOrEmpty(str) then
-            ErrorResult.Create "Account Key is required" |> Error
+            Error "Account Key is required"
         else AccountKey str |> Ok
 
     let value (AccountKey x) = x
@@ -82,7 +74,7 @@ module CollectionId =
 
     let create str =
         if String.IsNullOrEmpty(str) then
-            ErrorResult.Create "Collection ID is required" |> Error
+            Error "Collection ID is required" 
         else CollectionId str |> Ok
 
     let value (CollectionId x) = x
@@ -123,7 +115,7 @@ module EmailAddress =
             
             if value.Contains("@") then
                 value.ToLower().Trim() |> EmailAddress |> Ok 
-            else ErrorResult.Create "Email Address must contain an '@' sign" |> Error
+            else Error "Email Address must contain an '@' sign"
 
         String254.create "Email Address" value
         |> Result.bind validate

@@ -23,12 +23,11 @@ module UpdateUser =
                 |> Option.defaultValue (String.Empty)
                 |> EntityId
 
-            let errorResult = ErrorResult.Create "User DTO payload is required"
             let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
-            let error result = req.CreateErrorResultResponse(result, log)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return
-                Result.ofOption errorResult dto
+                Result.ofOption "User DTO payload is required" dto
                 |> Result.bind (UserManager.update storageOptions entityId)
                 |> Result.either ok error
         } |> Async.RunSynchronously
@@ -44,13 +43,12 @@ module CreateUser =
             let storageOptions = Settings.getStorageOptions "UserCollection"
             let! dto = req.GetDto<UpsertUserDto>()
 
-            let errorResult = ErrorResult.Create "User DTO payload is required"
             let password = DefaultPassword defaultPassword
             let ok (EntityId id) = req.CreateResponse(HttpStatusCode.OK, id)
-            let error result = req.CreateErrorResultResponse(result, log)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return
-                Result.ofOption errorResult dto
+                Result.ofOption "User DTO payload is required" dto
                 |> Result.bind (UserManager.create storageOptions password)
                 |> Result.either ok error
         } |> Async.RunSynchronously
@@ -62,15 +60,14 @@ module DeleteUser =
         async {
             log.Info(sprintf "Executing DeleteUser func...")
 
-            let errorResult = ErrorResult.Create "User ID is required (?id=<userid>)"
             let storageOptions = Settings.getStorageOptions "UserCollection"
             let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
-            let error result = req.CreateErrorResultResponse(result, log)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return 
                 req.TryGetQueryStringValue "id" 
                 |> Option.map EntityId
-                |> Result.ofOption errorResult
+                |> Result.ofOption "User ID is required (?id=<userid>)"
                 |> Result.bind (UserManager.delete storageOptions)
                 |> Result.either ok error
                     
@@ -83,15 +80,14 @@ module GetUser =
         async {
             log.Info(sprintf "Executing GetUser func...")
 
-            let errorResult = ErrorResult.Create "User ID is required (?id=<userid>)"
             let storageOptions = Settings.getStorageOptions "UserCollection"
             let ok dto = req.CreateResponse(HttpStatusCode.OK, dto)
-            let error result = req.CreateErrorResultResponse(result, log)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return 
                 req.TryGetQueryStringValue "id" 
                 |> Option.map EntityId
-                |> Result.ofOption errorResult
+                |> Result.ofOption "User ID is required (?id=<userid>)"
                 |> Result.bind (UserManager.find storageOptions)
                 |> Result.either ok error
                     
@@ -106,7 +102,7 @@ module GetAllUsers =
 
             let storageOptions = Settings.getStorageOptions "UserCollection"
             let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
-            let error result = req.CreateErrorResultResponse(result, log)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return 
                 UserManager.getAll storageOptions

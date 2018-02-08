@@ -40,12 +40,16 @@ module DataTypes =
         | DisplayNameProperty
         | EmailAddressProperty
         | PasswordProperty
+        | OldPasswordProperty
+        | NewPasswordProperty
             with static member Value propertyName =
                     match propertyName with
                         | DefaultPasswordProperty -> "Default Password"
                         | DisplayNameProperty -> "Display Name"
                         | EmailAddressProperty -> "Email Address"
                         | PasswordProperty -> "Password"
+                        | OldPasswordProperty -> "Old Password"
+                        | NewPasswordProperty -> "New Password"
 
     type StorageOptions = {
         DatabaseId: string

@@ -133,6 +133,51 @@ module UserManager =
 
     let getHashedPasswordValue (HashedPassword x) = x
 
+    let resetPassword (opts: StorageOptions) entityId defaultPassword =
+
+        let task (client: DocumentClient) databaseId collectionId = result {
+            let! (DefaultPassword validPassword) = validateDefaultPassword defaultPassword
+            let! hashedPassword = HashProvider.hash validPassword
+            let (HashedPassword password) = hashedPassword
+
+            let! entity = BaseManager.read<User> opts entityId
+            
+            entity.Password <- password
+
+            return! BaseManager.replace entityId entity client databaseId collectionId
+        }
+
+        BaseManager.executeTask opts task
+
+    let updatePassword (opts: StorageOptions) entityId (dto: UpdateUserPasswordDto) =
+
+        let task (client: DocumentClient) databaseId collectionId = result {
+            let! validOldPassword = String15.create OldPasswordProperty dto.OldPassword
+            let! validNewPassword = String15.create NewPasswordProperty dto.NewPassword
+
+            let oldPassword = String15.value validOldPassword
+            let newPassword = String15.value validNewPassword
+
+            let! hashedOldPassword = HashProvider.hash oldPassword
+            let! hashedNewPassword = HashProvider.hash newPassword
+
+            let (HashedPassword oldPsw) = hashedOldPassword
+            let (HashedPassword newPsw) = hashedNewPassword
+
+            if oldPassword = newPassword then
+                return! Result.Error "Old Password must be different than New Password"
+            elif BaseManager.propertyValueExists client databaseId collectionId PasswordSqlProperty oldPsw |> not then
+                return! Result.Error "Old Password is incorrect"
+            else
+                let! entity = BaseManager.read<User> opts entityId
+            
+                entity.Password <- newPsw
+
+                return! BaseManager.replace entityId entity client databaseId collectionId
+        }
+
+        BaseManager.executeTask opts task
+
     let authenticate (opts: StorageOptions) (dto: AuthenticateUserDto) =
 
         let task (client: DocumentClient) databaseId collectionId = result {

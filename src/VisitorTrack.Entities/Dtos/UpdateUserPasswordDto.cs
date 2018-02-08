@@ -5,7 +5,5 @@ namespace VisitorTrack.Entities.Dtos
         public string NewPassword { get; set; }
 
         public string OldPassword { get; set; }
-
-        public string EmailAddress { get; set; }
     }
 }

@@ -16,7 +16,7 @@ module UpdateUser =
         async {
             log.Info(sprintf "Executing UpdateUser func...")
 
-            let storageOptions = Settings.getStorageOptions "UserCollection"
+            let storageOptions = Settings.getStorageOptions UserCollection
             let! dto = req.GetDto<UpsertUserDto>()
             let entityId =
                 req.TryGetQueryStringValue "id" 
@@ -40,7 +40,7 @@ module CreateUser =
             log.Info(sprintf "Executing CreateUser func...")
 
             let defaultPassword = Environment.GetEnvironmentVariable("DefaultPassword")
-            let storageOptions = Settings.getStorageOptions "UserCollection"
+            let storageOptions = Settings.getStorageOptions UserCollection
             let! dto = req.GetDto<UpsertUserDto>()
 
             let password = DefaultPassword defaultPassword
@@ -60,7 +60,7 @@ module DeleteUser =
         async {
             log.Info(sprintf "Executing DeleteUser func...")
 
-            let storageOptions = Settings.getStorageOptions "UserCollection"
+            let storageOptions = Settings.getStorageOptions UserCollection
             let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
@@ -80,7 +80,7 @@ module GetUser =
         async {
             log.Info(sprintf "Executing GetUser func...")
 
-            let storageOptions = Settings.getStorageOptions "UserCollection"
+            let storageOptions = Settings.getStorageOptions UserCollection
             let ok dto = req.CreateResponse(HttpStatusCode.OK, dto)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
@@ -100,7 +100,7 @@ module GetAllUsers =
         async {
             log.Info(sprintf "Executing GetAllUsers func...")
 
-            let storageOptions = Settings.getStorageOptions "UserCollection"
+            let storageOptions = Settings.getStorageOptions UserCollection
             let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
@@ -117,7 +117,7 @@ module AuthenticateUser =
         async {
             log.Info(sprintf "Executing AuthenticateUser func...")
 
-            let storageOptions = Settings.getStorageOptions "UserCollection"
+            let storageOptions = Settings.getStorageOptions UserCollection
             let! dto = req.GetDto<AuthenticateUserDto>()
 
             let ok dto = req.CreateResponse(HttpStatusCode.OK, dto)

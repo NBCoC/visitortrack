@@ -17,16 +17,17 @@ module DataTypes =
 
     type EntityId = EntityId of string
 
-    type UserRole =
-        | Admin
-        | Editor
-        | Viewer
+    type Token = Token of string
+
+    type CollectionId =
+        | UserCollection
+        | VisitorCollection
 
     type StorageOptions = {
         DatabaseId: string
         EndpointUrl: string
         AccountKey: string
-        CollectionId: string
+        CollectionId: CollectionId
     }
 
 [<RequireQualifiedAccess>]
@@ -68,17 +69,6 @@ module AccountKey =
         else AccountKey str |> Ok
 
     let value (AccountKey x) = x
-
-module CollectionId =
-    type T = private CollectionId of string
-
-    let create str =
-        if String.IsNullOrEmpty(str) then
-            Error "Collection ID is required" 
-        else CollectionId str |> Ok
-
-    let value (CollectionId x) = x
-
 
 module String254 =
     type T = private String254 of string

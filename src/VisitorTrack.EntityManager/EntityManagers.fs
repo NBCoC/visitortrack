@@ -11,6 +11,11 @@ open DataTypes
 [<RequireQualifiedAccess>]
 module BaseManager =
 
+    let getCollectionId collectionId =
+        match collectionId with
+            | UserCollection -> "UserCollection"
+            | VisitorCollection -> "VisitorCollection"
+
     let taskToResult ok task =
         let error (ex: exn) = ex.GetInnerMessage ()
 
@@ -20,11 +25,11 @@ module BaseManager =
         |> Result.ofChoice
         |> Result.doubleMap ok error
 
-    let getDocumentCollectionUri databaseId collectionId =
-        let database = DatabaseId.value databaseId
-        let collection = CollectionId.value collectionId
+    let getDatabaseUri databaseId =
+        UriFactory.CreateDatabaseUri(DatabaseId.value databaseId)
 
-        UriFactory.CreateDocumentCollectionUri(database, collection)
+    let getDocumentCollectionUri databaseId collectionId =
+        UriFactory.CreateDocumentCollectionUri(DatabaseId.value databaseId, getCollectionId collectionId)
 
     let getDocumentUri databaseId collectionId entityId = result {
 
@@ -34,24 +39,15 @@ module BaseManager =
                 Result.Error "Entity ID is required"
             else Result.Ok entityId
 
-        let database = DatabaseId.value databaseId
-        let collection = CollectionId.value collectionId
         let! (EntityId id) = validateEntityId entityId
 
-        return UriFactory.CreateDocumentUri(database, collection, id)
+        return UriFactory.CreateDocumentUri(DatabaseId.value databaseId, getCollectionId collectionId, id)
     }
-
-    let userConstraints () =
-        Collections.ObjectModel.Collection<UniqueKey>[| 
-                UniqueKey ( Paths = Collections.ObjectModel.Collection<string>[| "/emailAddress" |]); 
-                UniqueKey ( Paths = Collections.ObjectModel.Collection<string>[| "/token" |]) 
-            |]
 
     let executeTask (opts: StorageOptions) task = result {
         let! endpointUrl = EndpointUrl.create opts.EndpointUrl
         let! accountKey = AccountKey.create opts.AccountKey
         let! databaseId = DatabaseId.create opts.DatabaseId
-        let! collectionId = CollectionId.create opts.CollectionId
         let ok _ = ()
 
         let createDatabase (client: DocumentClient) databaseId =
@@ -59,13 +55,9 @@ module BaseManager =
             
             client.CreateDatabaseIfNotExistsAsync(database) |> taskToResult ok
 
-        let createCollection (client: DocumentClient) databaseId collectionId =
-            let uri = UriFactory.CreateDatabaseUri(DatabaseId.value databaseId)
-            let collection = DocumentCollection(Id = CollectionId.value collectionId)
-
-            collection.PartitionKey.Paths.Add("/pk")
-            collection.UniqueKeyPolicy <- UniqueKeyPolicy (UniqueKeys = userConstraints ())
-
+        let createCollection (client: DocumentClient) databaseId =
+            let uri = getDatabaseUri databaseId
+            let collection = DocumentCollection(Id = getCollectionId opts.CollectionId)
             let options = RequestOptions (OfferThroughput = Nullable<int>(2500) )
 
             client.CreateDocumentCollectionIfNotExistsAsync(uri, collection, options) |> taskToResult ok
@@ -73,9 +65,9 @@ module BaseManager =
         use client = new DocumentClient(Uri(EndpointUrl.value endpointUrl), AccountKey.value accountKey)
 
         do! createDatabase client databaseId
-        do! createCollection client databaseId collectionId
+        do! createCollection client databaseId
 
-        return! task client databaseId collectionId
+        return! task client databaseId opts.CollectionId
     }
 
     let create entity (client: DocumentClient) databaseId collectionId =
@@ -95,7 +87,7 @@ module BaseManager =
 
         executeTask opts task
 
-    let find<'T> (opts: StorageOptions) entityId =
+    let read<'T> (opts: StorageOptions) entityId =
 
         let task (client: DocumentClient) databaseId collectionId = result {
             let! uri = getDocumentUri databaseId collectionId entityId
@@ -142,8 +134,7 @@ module UserManager =
             let psw = getHashedPasswordValue hashedPassword
 
             let sql = 
-                sprintf "SELECT * FROM UserCollection WHERE UserCollection.EmailAddress = '%s' AND UserCollection.Password = '%s'"  
-                    email psw
+                String.Format("SELECT * FROM {0} WHERE {0}.EmailAddress = '{1}' AND {0}.Password = '{2}'", BaseManager.getCollectionId collectionId, email, psw)
 
             let toDto (user: User) =
                 UserAuthenticatedDto (
@@ -176,12 +167,9 @@ module UserManager =
 
         let task (client: DocumentClient) databaseId collectionId = result {
             let! displayName = String75.create "Display Name" dto.DisplayName
-            let! emailAddress = EmailAddress.create dto.EmailAddress
-
-            let! entity = BaseManager.find<User> opts entityId
+            let! entity = BaseManager.read<User> opts entityId
             
             entity.DisplayName <- String75.value displayName
-            entity.EmailAddress <- EmailAddress.value emailAddress
             entity.RoleId <- canonicalizeRole dto.RoleId
 
             return! BaseManager.replace entityId entity client databaseId collectionId

@@ -11,11 +11,6 @@ open DataTypes
 [<RequireQualifiedAccess>]
 module BaseManager =
 
-    let getCollectionId collectionId =
-        match collectionId with
-            | UserCollection -> "UserCollection"
-            | VisitorCollection -> "VisitorCollection"
-
     let taskToResult ok task =
         let error (ex: exn) = ex.GetInnerMessage ()
 
@@ -29,7 +24,7 @@ module BaseManager =
         UriFactory.CreateDatabaseUri(DatabaseId.value databaseId)
 
     let getDocumentCollectionUri databaseId collectionId =
-        UriFactory.CreateDocumentCollectionUri(DatabaseId.value databaseId, getCollectionId collectionId)
+        UriFactory.CreateDocumentCollectionUri(DatabaseId.value databaseId, CollectionId.Value collectionId)
 
     let getDocumentUri databaseId collectionId entityId = result {
 
@@ -41,7 +36,7 @@ module BaseManager =
 
         let! (EntityId id) = validateEntityId entityId
 
-        return UriFactory.CreateDocumentUri(DatabaseId.value databaseId, getCollectionId collectionId, id)
+        return UriFactory.CreateDocumentUri(DatabaseId.value databaseId, CollectionId.Value collectionId, id)
     }
 
     let executeTask (opts: StorageOptions) task = result {
@@ -57,7 +52,7 @@ module BaseManager =
 
         let createCollection (client: DocumentClient) databaseId =
             let uri = getDatabaseUri databaseId
-            let collection = DocumentCollection(Id = getCollectionId opts.CollectionId)
+            let collection = DocumentCollection(Id = CollectionId.Value opts.CollectionId)
             let options = RequestOptions (OfferThroughput = Nullable<int>(2500) )
 
             client.CreateDocumentCollectionIfNotExistsAsync(uri, collection, options) |> taskToResult ok
@@ -105,6 +100,22 @@ module BaseManager =
         return! client.ReplaceDocumentAsync(uri, entity) |> taskToResult ok
     }
 
+    let propertyValueExists (client: DocumentClient) databaseId collectionId propertyName propertyValue = result {
+        let uri = getDocumentCollectionUri databaseId collectionId
+        let collection = CollectionId.Value collectionId
+        let sqlPropertyName = SqlPropertyName.Value propertyName
+        let predicate _ = true
+
+        let sql = 
+            String.Format("SELECT * FROM {0} WHERE {0}.{1} = '{2}'", 
+                collection, sqlPropertyName, propertyValue)
+        
+        return!
+            client.CreateDocumentQuery(uri, sql).ToArray()
+            |> Array.tryHead
+            |> Option.exists predicate
+    }
+
 [<RequireQualifiedAccess>]
 module UserManager =
 
@@ -117,7 +128,7 @@ module UserManager =
     let validateDefaultPassword (DefaultPassword password) =
         let getValue value = String15.value value |> DefaultPassword
 
-        String15.create "Default Password" password
+        String15.create DefaultPasswordProperty password
         |> Result.map getValue
 
     let getHashedPasswordValue (HashedPassword x) = x
@@ -125,16 +136,20 @@ module UserManager =
     let authenticate (opts: StorageOptions) (dto: AuthenticateUserDto) =
 
         let task (client: DocumentClient) databaseId collectionId = result {
-            let! emailAddress = EmailAddress.create dto.EmailAddress
-            let! password = String15.create "Password" dto.Password
-            
+            let! validEmailAddress = EmailAddress.create dto.EmailAddress
+            let! validPassword = String15.create PasswordProperty dto.Password
+            let! hashedPassword = String15.value validPassword |> HashProvider.hash
+
             let uri = BaseManager.getDocumentCollectionUri databaseId collectionId
-            let email = EmailAddress.value emailAddress
-            let! hashedPassword = String15.value password |> HashProvider.hash
-            let psw = getHashedPasswordValue hashedPassword
+            let emailAddress = EmailAddress.value validEmailAddress
+            let password = getHashedPasswordValue hashedPassword
+            let collection = CollectionId.Value collectionId
+            let emailAddressPropertyName = SqlPropertyName.Value EmailAddressSqlProperty
+            let passwordPropertyName = SqlPropertyName.Value PasswordSqlProperty
 
             let sql = 
-                String.Format("SELECT * FROM {0} WHERE {0}.EmailAddress = '{1}' AND {0}.Password = '{2}'", BaseManager.getCollectionId collectionId, email, psw)
+                String.Format("SELECT * FROM {0} WHERE {0}.{1} = '{2}' AND {0}.{3} = '{4}'", 
+                    collection, emailAddressPropertyName, emailAddress, passwordPropertyName, password)
 
             let toDto (user: User) =
                 UserAuthenticatedDto (
@@ -149,7 +164,7 @@ module UserManager =
                 client.CreateDocumentQuery<User>(uri, sql).ToArray()
                 |> Array.tryHead
                 |> Option.map toDto
-                |> Result.ofOption (sprintf "User with email address of '%s' not found or password is incorrect" email)
+                |> Result.ofOption (sprintf "User with email address of '%s' not found or password is incorrect" emailAddress)
         }
 
         BaseManager.executeTask opts task
@@ -166,10 +181,10 @@ module UserManager =
     let update (opts: StorageOptions) entityId (dto: UpsertUserDto) =
 
         let task (client: DocumentClient) databaseId collectionId = result {
-            let! displayName = String75.create "Display Name" dto.DisplayName
+            let! validDisplayName = String75.create DisplayNameProperty dto.DisplayName
             let! entity = BaseManager.read<User> opts entityId
             
-            entity.DisplayName <- String75.value displayName
+            entity.DisplayName <- String75.value validDisplayName
             entity.RoleId <- canonicalizeRole dto.RoleId
 
             return! BaseManager.replace entityId entity client databaseId collectionId
@@ -180,22 +195,27 @@ module UserManager =
     let create (opts: StorageOptions) defaultPassword (dto: UpsertUserDto) =
 
         let task (client: DocumentClient) databaseId collectionId = result {
-            let! displayName = String75.create "Display Name" dto.DisplayName
-            let! emailAddress = EmailAddress.create dto.EmailAddress
-            let! (DefaultPassword validPsw) = validateDefaultPassword defaultPassword
-            let! password = validPsw |> HashProvider.hash
-            let generateToken () = System.Guid.NewGuid().ToString()
+            let! validEmailAddress = EmailAddress.create dto.EmailAddress
+            let emailAddress = EmailAddress.value validEmailAddress
 
-            let entity = 
-                User (
-                    DisplayName = String75.value displayName,
-                    EmailAddress = EmailAddress.value emailAddress,
-                    Password = getHashedPasswordValue password,
-                    RoleId = canonicalizeRole dto.RoleId,
-                    Token = generateToken ()
-                )
+            if BaseManager.propertyValueExists client databaseId collectionId EmailAddressSqlProperty emailAddress then
+                return! sprintf "User with email address of '%s' already exists" emailAddress |> Result.Error 
+            else
+                let! validDisplayName = String75.create DisplayNameProperty dto.DisplayName
+                let! (DefaultPassword password) = validateDefaultPassword defaultPassword
+                let! validPassword = password |> HashProvider.hash
+                let generateToken () = System.Guid.NewGuid().ToString()
 
-            return! BaseManager.create entity client databaseId collectionId
+                let entity = 
+                    User (
+                        DisplayName = String75.value validDisplayName,
+                        EmailAddress = EmailAddress.value validEmailAddress,
+                        Password = getHashedPasswordValue validPassword,
+                        RoleId = canonicalizeRole dto.RoleId,
+                        Token = generateToken ()
+                    )
+
+                return! BaseManager.create entity client databaseId collectionId
         }
 
         BaseManager.executeTask opts task

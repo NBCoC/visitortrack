@@ -22,6 +22,30 @@ module DataTypes =
     type CollectionId =
         | UserCollection
         | VisitorCollection
+            with static member Value collectionId =
+                    match collectionId with
+                        | UserCollection -> "UserCollection"
+                        | VisitorCollection -> "VisitorCollection"
+
+    type SqlPropertyName =
+        | EmailAddressSqlProperty
+        | PasswordSqlProperty
+            with static member Value propertyName =
+                    match propertyName with
+                        | EmailAddressSqlProperty -> "EmailAddress"
+                        | PasswordSqlProperty -> "Password"
+
+    type PropertyName =
+        | DefaultPasswordProperty
+        | DisplayNameProperty
+        | EmailAddressProperty
+        | PasswordProperty
+            with static member Value propertyName =
+                    match propertyName with
+                        | DefaultPasswordProperty -> "Default Password"
+                        | DisplayNameProperty -> "Display Name"
+                        | EmailAddressProperty -> "Email Address"
+                        | PasswordProperty -> "Password"
 
     type StorageOptions = {
         DatabaseId: string
@@ -34,10 +58,12 @@ module DataTypes =
 module private StringType =
 
     let create propertyName length dataType value =
+        let propName = PropertyName.Value propertyName
+
         if String.IsNullOrEmpty(value) then
-            sprintf "%s is required" propertyName |> Error
+            sprintf "%s is required" propName |> Error
         elif value.Length > length then
-            sprintf "%s cannot be longer than %i characters" propertyName length |> Error
+            sprintf "%s cannot be longer than %i characters" propName length |> Error
         else dataType value |> Ok
 
 module DatabaseId =
@@ -107,7 +133,7 @@ module EmailAddress =
                 value.ToLower().Trim() |> EmailAddress |> Ok 
             else Error "Email Address must contain an '@' sign"
 
-        String254.create "Email Address" value
+        String254.create EmailAddressProperty value
         |> Result.bind validate
 
     let value (EmailAddress x) = x

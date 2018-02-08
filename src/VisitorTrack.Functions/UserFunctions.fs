@@ -88,7 +88,7 @@ module GetUser =
                 req.TryGetQueryStringValue "id" 
                 |> Option.map EntityId
                 |> Result.ofOption "User ID is required (?id=<userid>)"
-                |> Result.bind (BaseManager.find<UserDto> storageOptions)
+                |> Result.bind (BaseManager.read<UserDto> storageOptions)
                 |> Result.either ok error
                     
         } |> Async.RunSynchronously

@@ -16,4 +16,7 @@ module HashProvider =
             let data = Encoding.UTF8.GetBytes(sprintf "%s%s%s" preSalt str postSalt)
             use provider = new SHA256CryptoServiceProvider()
             let hashed = provider.ComputeHash(data)
-            Convert.ToBase64String(hashed) |> HashedPassword |> Ok
+            
+            Convert.ToBase64String(hashed) 
+            |> HashedPassword 
+            |> Ok

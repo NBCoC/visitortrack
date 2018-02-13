@@ -7,12 +7,14 @@ open Microsoft.Azure.Documents.Client
 open VisitorTrack.Entities.Models
 open VisitorTrack.Entities.Dtos
 open DataTypes
+open CustomTypes
+open ResultExtensions
 
 [<RequireQualifiedAccess>]
-module BaseManager =
+module EntityManager =
 
     let taskToResult ok task =
-        let error (ex: exn) = ex.GetInnerMessage ()
+        let error (ex: exn) = ex.GetDetails ()
 
         Async.AwaitTask task
         |> Async.Catch
@@ -57,7 +59,8 @@ module BaseManager =
 
             client.CreateDocumentCollectionIfNotExistsAsync(uri, collection, options) |> taskToResult ok
 
-        use client = new DocumentClient(Uri(EndpointUrl.value endpointUrl), AccountKey.value accountKey)
+        let uri = Uri(EndpointUrl.value endpointUrl)
+        use client = new DocumentClient(uri, AccountKey.value accountKey)
 
         do! createDatabase client databaseId
         do! createCollection client databaseId
@@ -65,7 +68,7 @@ module BaseManager =
         return! task client databaseId opts.CollectionId
     }
 
-    let create entity (client: DocumentClient) databaseId collectionId =
+    let insert entity (client: DocumentClient) databaseId collectionId =
         let uri = getDocumentCollectionUri databaseId collectionId
         let ok (response: ResourceResponse<Document>) = response.Resource.Id |> EntityId
 
@@ -82,7 +85,7 @@ module BaseManager =
 
         executeTask opts task
 
-    let read<'T> (opts: StorageOptions) entityId =
+    let find<'T> (opts: StorageOptions) entityId =
 
         let task (client: DocumentClient) databaseId collectionId = result {
             let! uri = getDocumentUri databaseId collectionId entityId
@@ -110,7 +113,7 @@ module BaseManager =
             String.Format("SELECT * FROM {0} WHERE {0}.{1} = '{2}'", 
                 collection, sqlPropertyName, propertyValue)
         
-        return!
+        return
             client.CreateDocumentQuery(uri, sql).ToArray()
             |> Array.tryHead
             |> Option.exists predicate
@@ -121,8 +124,7 @@ module UserManager =
 
     let canonicalizeRole role =
         match role with
-        | UserRoleEnum.Admin -> UserRoleEnum.Admin
-        | UserRoleEnum.Editor -> UserRoleEnum.Editor
+        | UserRoleEnum.Admin | UserRoleEnum.Editor -> role
         | _ -> UserRoleEnum.Viewer
 
     let validateDefaultPassword (DefaultPassword password) =
@@ -140,14 +142,14 @@ module UserManager =
             let! hashedPassword = HashProvider.hash validPassword
             let (HashedPassword password) = hashedPassword
 
-            let! entity = BaseManager.read<User> opts entityId
+            let! entity = EntityManager.find<User> opts entityId
             
             entity.Password <- password
 
-            return! BaseManager.replace entityId entity client databaseId collectionId
+            return! EntityManager.replace entityId entity client databaseId collectionId
         }
 
-        BaseManager.executeTask opts task
+        EntityManager.executeTask opts task
 
     let updatePassword (opts: StorageOptions) entityId (dto: UpdateUserPasswordDto) =
 
@@ -164,19 +166,21 @@ module UserManager =
             let (HashedPassword oldPsw) = hashedOldPassword
             let (HashedPassword newPsw) = hashedNewPassword
 
+            let! valueExists = EntityManager.propertyValueExists client databaseId collectionId PasswordSqlProperty oldPsw
+
             if oldPassword = newPassword then
                 return! Result.Error "Old Password must be different than New Password"
-            elif BaseManager.propertyValueExists client databaseId collectionId PasswordSqlProperty oldPsw |> not then
+            elif valueExists |> not then
                 return! Result.Error "Old Password is incorrect"
             else
-                let! entity = BaseManager.read<User> opts entityId
+                let! entity = EntityManager.find<User> opts entityId
             
                 entity.Password <- newPsw
 
-                return! BaseManager.replace entityId entity client databaseId collectionId
+                return! EntityManager.replace entityId entity client databaseId collectionId
         }
 
-        BaseManager.executeTask opts task
+        EntityManager.executeTask opts task
 
     let authenticate (opts: StorageOptions) (dto: AuthenticateUserDto) =
 
@@ -185,7 +189,7 @@ module UserManager =
             let! validPassword = String15.create PasswordProperty dto.Password
             let! hashedPassword = String15.value validPassword |> HashProvider.hash
 
-            let uri = BaseManager.getDocumentCollectionUri databaseId collectionId
+            let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
             let emailAddress = EmailAddress.value validEmailAddress
             let password = getHashedPasswordValue hashedPassword
             let collection = CollectionId.Value collectionId
@@ -212,38 +216,39 @@ module UserManager =
                 |> Result.ofOption (sprintf "User with email address of '%s' not found or password is incorrect" emailAddress)
         }
 
-        BaseManager.executeTask opts task
+        EntityManager.executeTask opts task
 
     let getAll (opts: StorageOptions) =
 
         let task (client: DocumentClient) databaseId collectionId = result {
-            let uri = BaseManager.getDocumentCollectionUri databaseId collectionId
+            let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
             return client.CreateDocumentQuery<UserDto>(uri).ToArray()
         }
         
-        BaseManager.executeTask opts task
+        EntityManager.executeTask opts task
 
     let update (opts: StorageOptions) entityId (dto: UpsertUserDto) =
 
         let task (client: DocumentClient) databaseId collectionId = result {
             let! validDisplayName = String75.create DisplayNameProperty dto.DisplayName
-            let! entity = BaseManager.read<User> opts entityId
+            let! entity = EntityManager.find<User> opts entityId
             
             entity.DisplayName <- String75.value validDisplayName
             entity.RoleId <- canonicalizeRole dto.RoleId
 
-            return! BaseManager.replace entityId entity client databaseId collectionId
+            return! EntityManager.replace entityId entity client databaseId collectionId
         }
         
-        BaseManager.executeTask opts task
+        EntityManager.executeTask opts task
 
     let create (opts: StorageOptions) defaultPassword (dto: UpsertUserDto) =
 
         let task (client: DocumentClient) databaseId collectionId = result {
             let! validEmailAddress = EmailAddress.create dto.EmailAddress
             let emailAddress = EmailAddress.value validEmailAddress
+            let! valueExists = EntityManager.propertyValueExists client databaseId collectionId EmailAddressSqlProperty emailAddress
 
-            if BaseManager.propertyValueExists client databaseId collectionId EmailAddressSqlProperty emailAddress then
+            if valueExists then
                 return! sprintf "User with email address of '%s' already exists" emailAddress |> Result.Error 
             else
                 let! validDisplayName = String75.create DisplayNameProperty dto.DisplayName
@@ -260,9 +265,9 @@ module UserManager =
                         Token = generateToken ()
                     )
 
-                return! BaseManager.create entity client databaseId collectionId
+                return! EntityManager.insert entity client databaseId collectionId
         }
 
-        BaseManager.executeTask opts task
+        EntityManager.executeTask opts task
 
     

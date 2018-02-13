@@ -9,14 +9,15 @@
             "windows": {
                 "command": "dotnet build .\\VisitorTrack.Entities\\VisitorTrack.Entities.csproj"
             },
-            "problemMatcher": []
+            "problemMatcher": ["$msCompile"]
         },
         {
             "label": "Build Entity Manager",
             "type": "shell",
             "windows": {
                 "command": "dotnet build .\\VisitorTrack.EntityManager\\VisitorTrack.EntityManager.fsproj"
-            }
+            },
+            "problemMatcher": ["$msCompile"]
         },
         {
             "label": "Build Functions",
@@ -24,7 +25,7 @@
             "windows": {
                 "command": "dotnet build .\\VisitorTrack.Functions\\VisitorTrack.Functions.fsproj"
             },
-            "problemMatcher": []
+            "problemMatcher": ["$msCompile"]
         }
     ]
 }

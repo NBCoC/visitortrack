@@ -25,6 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="ResultExtensions">
+      <HintPath>..\..\Binaries\ResultExtensions\net451\ResultExtensions.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\VisitorTrack.EntityManager\VisitorTrack.EntityManager.fsproj" />
   </ItemGroup>
 

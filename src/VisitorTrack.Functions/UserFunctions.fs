@@ -8,6 +8,7 @@ open Microsoft.Azure.WebJobs.Host
 open Microsoft.Azure.WebJobs.Extensions.Http
 open VisitorTrack.EntityManager
 open VisitorTrack.Entities.Dtos
+open ResultExtensions
 
 module UpdateUser =
 
@@ -68,7 +69,7 @@ module DeleteUser =
                 req.TryGetQueryStringValue "id" 
                 |> Option.map EntityId
                 |> Result.ofOption "User ID is required (?id=<userid>)"
-                |> Result.bind (BaseManager.delete storageOptions)
+                |> Result.bind (EntityManager.delete storageOptions)
                 |> Result.either ok error
                     
         } |> Async.RunSynchronously
@@ -88,7 +89,7 @@ module GetUser =
                 req.TryGetQueryStringValue "id" 
                 |> Option.map EntityId
                 |> Result.ofOption "User ID is required (?id=<userid>)"
-                |> Result.bind (BaseManager.read<UserDto> storageOptions)
+                |> Result.bind (EntityManager.find<UserDto> storageOptions)
                 |> Result.either ok error
                     
         } |> Async.RunSynchronously

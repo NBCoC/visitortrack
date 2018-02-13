@@ -6,10 +6,12 @@ open System
 module DataTypes =
 
     type Exception with
-        member this.GetInnerMessage () =
+        member this.GetDetails () =
             if isNull this.InnerException then
                 this.Message
-            else this.InnerException.GetInnerMessage()
+            else 
+                let message = this.InnerException.GetDetails()
+                sprintf "%s %s %s" this.Message Environment.NewLine message 
 
     type DefaultPassword = DefaultPassword of string
 
@@ -58,10 +60,23 @@ module DataTypes =
         CollectionId: CollectionId
     }
 
-[<RequireQualifiedAccess>]
-module private StringType =
+module CustomTypes =
 
-    let create propertyName length dataType value =
+    type DatabaseId = private DatabaseId of string
+
+    type EndpointUrl = private EndpointUrl of string
+
+    type AccountKey = private AccountKey of string
+
+    type String254 = private String254 of string
+
+    type String75 = private String75 of string
+
+    type String15 = private String15 of string
+
+    type EmailAddress = private EmailAddress of string
+
+    let private create propertyName length dataType value =
         let propName = PropertyName.Value propertyName
 
         if String.IsNullOrEmpty(value) then
@@ -70,74 +85,81 @@ module private StringType =
             sprintf "%s cannot be longer than %i characters" propName length |> Error
         else dataType value |> Ok
 
-module DatabaseId =
-    type T = private DatabaseId of string
+    module DatabaseId =
+        
+        let create str =
+            if String.IsNullOrEmpty(str) then
+                Error "Database ID is required"
+            else DatabaseId str |> Ok
 
-    let create str =
-        if String.IsNullOrEmpty(str) then
-            Error "Database ID is required"
-        else DatabaseId str |> Ok
+        let apply f (DatabaseId x) = f x
 
-    let value (DatabaseId x) = x
+        let value x = apply id x
 
-module EndpointUrl =
-    type T = private EndpointUrl of string
+    module EndpointUrl =
+        
+        let create str =
+            if String.IsNullOrEmpty(str) then
+                Error "Endpoint URL is required"
+            else EndpointUrl str |> Ok
 
-    let create str =
-        if String.IsNullOrEmpty(str) then
-            Error "Endpoint URL is required"
-        else EndpointUrl str |> Ok
+        let apply f (EndpointUrl x) = f x
 
-    let value (EndpointUrl x) = x
+        let value x = apply id x
 
-module AccountKey =
-    type T = private AccountKey of string
+    module AccountKey =
+        
+        let create str =
+            if String.IsNullOrEmpty(str) then
+                Error "Account Key is required"
+            else AccountKey str |> Ok
 
-    let create str =
-        if String.IsNullOrEmpty(str) then
-            Error "Account Key is required"
-        else AccountKey str |> Ok
+        let apply f (AccountKey x) = f x
 
-    let value (AccountKey x) = x
+        let value x = apply id x
 
-module String254 =
-    type T = private String254 of string
+    module String254 =
+        
+        let create propertyName value =
+            create propertyName 254 String254 value
 
-    let create propertyName value =
-        StringType.create propertyName 254 String254 value
+        let apply f (String254 x) = f x
 
-    let value (String254 x) = x
+        let value x = apply id x
 
 
-module String75 =
-    type T = private String75 of string
+    module String75 =
+        
+        let create propertyName value =
+            create propertyName 75 String75 value
 
-    let create propertyName value =
-        StringType.create propertyName 75 String75 value
+        let apply f (String75 x) = f x
 
-    let value (String75 x) = x
+        let value x = apply id x
 
-module String15 =
-    type T = private String15 of string
+    module String15 =
+        
+        let create propertyName value =
+            create propertyName 15 String15 value
 
-    let create propertyName value =
-        StringType.create propertyName 15 String15 value
+        let apply f (String15 x) = f x
 
-    let value (String15 x) = x
+        let value x = apply id x
 
-module EmailAddress =
-    type T = private EmailAddress of string
+    module EmailAddress =
+        
+        let create value =
 
-    let create value =
+            let validate string254 =
+                let value = String254.value string254
+                
+                if value.Contains("@") then
+                    value.ToLower().Trim() |> EmailAddress |> Ok 
+                else Error "Email Address must contain an '@' sign"
 
-        let validate string254 =
-            let value = String254.value string254
-            
-            if value.Contains("@") then
-                value.ToLower().Trim() |> EmailAddress |> Ok 
-            else Error "Email Address must contain an '@' sign"
+            String254.create EmailAddressProperty value
+            |> Result.bind validate
 
-        String254.create EmailAddressProperty value
-        |> Result.bind validate
+        let apply f (EmailAddress x) = f x
 
-    let value (EmailAddress x) = x
+        let value x = apply id x

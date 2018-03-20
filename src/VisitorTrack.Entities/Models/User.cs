@@ -14,9 +14,5 @@ namespace VisitorTrack.Entities.Models
         public UserRoleEnum RoleId { get; set; }
 
         public string DisplayName { get; set; }
-
-        public string Token { get; set; }
-
-        public override string ToString() => JsonConvert.SerializeObject(this);
     }
 }

@@ -7,18 +7,19 @@ open Microsoft.Azure.WebJobs
 open Microsoft.Azure.WebJobs.Host
 open Microsoft.Azure.WebJobs.Extensions.Http
 open VisitorTrack.EntityManager
+open VisitorTrack.EntityManager.CustomTypes
 open VisitorTrack.Entities.Dtos
-open ResultExtensions
+open VisitorTrack.EntityManager.Extensions
 
 module UpdateUser =
 
     [<FunctionName("UpdateUserHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Function, "put")>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "put")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing UpdateUser func...")
 
             let storageOptions = Settings.getStorageOptions UserCollection
-            let! dto = req.GetDto<UpsertUserDto>()
+            let! dto = req.TryGetDto<UpsertUserDto>()
             let entityId =
                 req.TryGetQueryStringValue "id" 
                 |> Option.defaultValue (String.Empty)
@@ -31,18 +32,19 @@ module UpdateUser =
                 Result.ofOption "DTO payload is required" dto
                 |> Result.bind (UserManager.update storageOptions entityId)
                 |> Result.either ok error
+                
         } |> Async.RunSynchronously
 
 module CreateUser =
 
     [<FunctionName("CreateUserHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Function, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing CreateUser func...")
 
-            let defaultPassword = Environment.GetEnvironmentVariable("DefaultPassword")
+            let defaultPassword = Settings.getDefaultPassword()
             let storageOptions = Settings.getStorageOptions UserCollection
-            let! dto = req.GetDto<UpsertUserDto>()
+            let! dto = req.TryGetDto<UpsertUserDto>()
 
             let password = DefaultPassword defaultPassword
             let ok (EntityId id) = req.CreateResponse(HttpStatusCode.OK, id)
@@ -52,12 +54,13 @@ module CreateUser =
                 Result.ofOption "DTO payload is required" dto
                 |> Result.bind (UserManager.create storageOptions password)
                 |> Result.either ok error
+
         } |> Async.RunSynchronously
 
 module DeleteUser =
 
     [<FunctionName("DeleteUserHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Function, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing DeleteUser func...")
 
@@ -68,7 +71,7 @@ module DeleteUser =
             return 
                 req.TryGetQueryStringValue "id" 
                 |> Option.map EntityId
-                |> Result.ofOption "User ID is required (?id=<userid>)"
+                |> Result.ofOption "User ID is required"
                 |> Result.bind (EntityManager.delete storageOptions)
                 |> Result.either ok error
                     
@@ -77,7 +80,7 @@ module DeleteUser =
 module GetUser =
 
     [<FunctionName("GetUserHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Function, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing GetUser func...")
 
@@ -88,7 +91,7 @@ module GetUser =
             return 
                 req.TryGetQueryStringValue "id" 
                 |> Option.map EntityId
-                |> Result.ofOption "User ID is required (?id=<userid>)"
+                |> Result.ofOption "User ID is required"
                 |> Result.bind (EntityManager.find<UserDto> storageOptions)
                 |> Result.either ok error
                     
@@ -97,7 +100,7 @@ module GetUser =
 module GetAllUsers =
 
     [<FunctionName("GetAllUsersHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Function, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing GetAllUsers func...")
 
@@ -114,18 +117,21 @@ module GetAllUsers =
 module AuthenticateUser =
 
     [<FunctionName("AuthenticateUserHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Function, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing AuthenticateUser func...")
 
             let storageOptions = Settings.getStorageOptions UserCollection
-            let! dto = req.GetDto<AuthenticateUserDto>()
+            let! dto = req.TryGetDto<AuthenticateUserDto>()
 
-            let ok dto = req.CreateResponse(HttpStatusCode.OK, dto)
+            let ok (dto: UserAuthenticatedDto) = 
+                dto.Token <- Settings.getToken()
+                req.CreateResponse(HttpStatusCode.OK, dto)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return
                 Result.ofOption "DTO payload is required" dto
                 |> Result.bind (UserManager.authenticate storageOptions)
                 |> Result.either ok error
+
         } |> Async.RunSynchronously

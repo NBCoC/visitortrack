@@ -3,7 +3,7 @@ namespace VisitorTrack.EntityManager
 open System.Security.Cryptography
 open System.Text
 open System
-open DataTypes
+open CustomTypes
 
 module HashProvider =
 

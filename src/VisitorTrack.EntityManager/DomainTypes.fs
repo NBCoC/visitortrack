@@ -2,22 +2,27 @@ namespace VisitorTrack.EntityManager
 
 open System
 
-[<AutoOpen>]
-module DataTypes =
+module CustomTypes =
 
-    type Exception with
-        member this.GetDetails () =
-            if isNull this.InnerException then
-                this.Message
-            else 
-                let message = this.InnerException.GetDetails()
-                sprintf "%s %s %s" this.Message Environment.NewLine message 
+    type DatabaseId = private DatabaseId of string
+
+    type EndpointUrl = private EndpointUrl of string
+
+    type AccountKey = private AccountKey of string
+
+    type String254 = private String254 of string
+
+    type String75 = private String75 of string
+
+    type String15 = private String15 of string
+
+    type EmailAddress = private EmailAddress of string
 
     type DefaultPassword = DefaultPassword of string
 
     type HashedPassword = HashedPassword of string
 
-    type EntityId = EntityId of string
+    type EntityId =  EntityId of string
 
     type Token = Token of string
 
@@ -52,29 +57,6 @@ module DataTypes =
                         | PasswordProperty -> "Password"
                         | OldPasswordProperty -> "Old Password"
                         | NewPasswordProperty -> "New Password"
-
-    type StorageOptions = {
-        DatabaseId: string
-        EndpointUrl: string
-        AccountKey: string
-        CollectionId: CollectionId
-    }
-
-module CustomTypes =
-
-    type DatabaseId = private DatabaseId of string
-
-    type EndpointUrl = private EndpointUrl of string
-
-    type AccountKey = private AccountKey of string
-
-    type String254 = private String254 of string
-
-    type String75 = private String75 of string
-
-    type String15 = private String15 of string
-
-    type EmailAddress = private EmailAddress of string
 
     let private create propertyName length dataType value =
         let propName = PropertyName.Value propertyName
@@ -127,6 +109,8 @@ module CustomTypes =
 
         let value x = apply id x
 
+        let equals (String254 x) (String254 y) =
+            x = y
 
     module String75 =
         
@@ -137,6 +121,9 @@ module CustomTypes =
 
         let value x = apply id x
 
+        let equals (String75 x) (String75 y) =
+            x = y
+
     module String15 =
         
         let create propertyName value =
@@ -145,6 +132,9 @@ module CustomTypes =
         let apply f (String15 x) = f x
 
         let value x = apply id x
+
+        let equals (String15 x) (String15 y) =
+            x = y
 
     module EmailAddress =
         
@@ -163,3 +153,15 @@ module CustomTypes =
         let apply f (EmailAddress x) = f x
 
         let value x = apply id x
+
+
+[<AutoOpen>]
+module DataTypes =
+    open CustomTypes
+
+    type StorageOptions = {
+        DatabaseId: string
+        EndpointUrl: string
+        AccountKey: string
+        CollectionId: CollectionId
+    }

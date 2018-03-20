@@ -7,12 +7,6 @@ open System.Net.Http
 open Newtonsoft.Json
 
 [<RequireQualifiedAccess>]
-module Constants =
-
-    let [<Literal>] TokenHeader = "VISITOR-TRACK-TOKEN"
-
-
-[<RequireQualifiedAccess>]
 module Settings =
 
     let getStorageOptions collectionId = {
@@ -21,6 +15,12 @@ module Settings =
         DatabaseId = Environment.GetEnvironmentVariable("DbName")
         CollectionId = collectionId
     }
+
+    let getDefaultPassword () =
+        Environment.GetEnvironmentVariable("DefaultPassword")
+
+    let getToken () =
+        Environment.GetEnvironmentVariable("Token")
 
 [<AutoOpen>]
 module Extensions =
@@ -37,13 +37,16 @@ module Extensions =
             this.GetQueryNameValuePairs()
             |> Seq.tryPick queryStringValue
 
-        member this.GetDto<'Dto> () = async {
-            let! data = this.Content.ReadAsStringAsync() |> Async.AwaitTask
+        member this.TryGetDto<'Dto> () = 
+            async {
+                let! payload = 
+                    this.Content.ReadAsStringAsync() 
+                    |> Async.AwaitTask
 
-            let result =
-                if String.IsNullOrEmpty(data) then
-                    None
-                else JsonConvert.DeserializeObject<'Dto>(data) |> Some
+                let result =
+                    if String.IsNullOrEmpty(payload) then
+                        None
+                    else JsonConvert.DeserializeObject<'Dto>(payload) |> Some
 
-            return result
-        }
+                return result
+            }

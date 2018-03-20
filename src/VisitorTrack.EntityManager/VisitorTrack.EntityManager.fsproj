@@ -14,17 +14,12 @@
   </ItemGroup>
   
   <ItemGroup>
+    <Compile Include="Extensions.fs" />
     <Compile Include="DomainTypes.fs" />
     <Compile Include="Utilities.fs" />
     <Compile Include="EntityManagers.fs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="ResultExtensions">
-      <HintPath>..\..\Binaries\ResultExtensions\net451\ResultExtensions.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\VisitorTrack.Entities\VisitorTrack.Entities.csproj" />
   </ItemGroup>

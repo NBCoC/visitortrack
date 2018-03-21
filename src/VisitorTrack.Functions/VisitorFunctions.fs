@@ -36,10 +36,30 @@ module GetAgeGroups =
         |> Result.map VisitorManager.getAgeGroups
         |> Result.either ok error
 
+module GetVisitor =
+
+    [<FunctionName("GetVisitorHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+        log.Info(sprintf "Executing GetVisitor func...")
+
+        let opts = Settings.getStorageOptions ()
+        let ok dto = req.CreateResponse(HttpStatusCode.OK, dto)
+        let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+        let createRequest () =
+            req.TryGetQueryStringValue "id" 
+            |> Result.ofOption "Visitor ID is required"
+            |> Result.bind EntityId.create
+            |> Result.bind (VisitorManager.find opts)
+
+        Utility.validateToken req
+        |> Result.bind createRequest
+        |> Result.either ok error
+
 module DeleteVisitor =
 
     [<FunctionName("DeleteVisitorHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "delete")>] req: HttpRequestMessage, log: TraceWriter) = 
         log.Info(sprintf "Executing DeleteVisitor func...")
 
         let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
@@ -59,4 +79,24 @@ module DeleteVisitor =
         |> Result.bind createRequest
         |> Result.either ok error
                     
-      
+module SearchVisitors =
+
+    [<FunctionName("SearchVisitorsHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+        log.Info(sprintf "Executing SearchVisitors func...")
+
+        let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
+        let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+        let toRequest () : VisitorSearchRequest = {
+            Options = Settings.getStorageOptions ()
+            Text = Utility.getVisitorSearchCriteria req
+        }
+
+        let createRequest () =
+            toRequest ()
+            |> VisitorManager.search 
+
+        Utility.validateToken req
+        |> Result.bind createRequest
+        |> Result.either ok error

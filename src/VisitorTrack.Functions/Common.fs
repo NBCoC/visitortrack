@@ -80,3 +80,7 @@ module Utility =
     let getEntityId (req : HttpRequestMessage) =
         req.TryGetQueryStringValue "entityId"
         |> Option.defaultValue String.Empty
+
+    let getVisitorSearchCriteria (req : HttpRequestMessage) =
+        req.TryGetQueryStringValue "text"
+        |> Option.defaultValue String.Empty

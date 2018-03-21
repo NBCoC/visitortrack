@@ -90,7 +90,7 @@ module CreateUser =
 module DeleteUser =
 
     [<FunctionName("DeleteUserHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "delete")>] req: HttpRequestMessage, log: TraceWriter) = 
         log.Info(sprintf "Executing DeleteUser func...")
 
         let ok _ = req.CreateResponse(HttpStatusCode.NoContent)

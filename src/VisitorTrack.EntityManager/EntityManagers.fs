@@ -69,6 +69,30 @@ module EntityManager =
             return! task client databaseId collectionId
         }
 
+    let internal getAuthorizedUser (client: DocumentClient) databaseId id =
+        result {
+            let uri = getDocumentCollectionUri databaseId CollectionId.User
+
+            let sql = 
+                ContextUserId.value id 
+                |> sprintf "SELECT * FROM UserCollection WHERE UserCollection.id = '%s'"
+            
+            return!
+                client.CreateDocumentQuery<User>(uri, sql).ToArray()
+                |> Array.tryHead
+                |> Result.ofOption "Context User not found - Unauthorized!"
+        }
+
+    let internal checkEditorRole (user : User) =
+        match user.RoleId with
+            | UserRoleEnum.Admin | UserRoleEnum.Editor -> Result.Ok ()
+            | _ -> Result.Error "You are not authorized to perform this action"
+
+    let internal checkAdminRole (user : User) =
+        match user.RoleId with
+            | UserRoleEnum.Admin -> Result.Ok ()
+            | _ -> Result.Error "You are not authorized to perform this action"
+
     let internal insert (client: DocumentClient) databaseId collectionId entity =
         let uri = getDocumentCollectionUri databaseId collectionId
         let ok (response: ResourceResponse<Document>) = response.Resource.Id
@@ -77,17 +101,23 @@ module EntityManager =
         |> Result.fromTask ok
         |> Result.bind EntityId.create
 
-    let delete (opts: StorageOptions) collectionId entityId =
+    let internal delete (request : DeleteEntityRequest) collectionId =
 
-        let task (client: DocumentClient) databaseId collectionId = 
+        let task (client : DocumentClient) databaseId collectionId =
             result {
+                let! entityId = EntityId.create request.EntityId
+                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! authorizedUser = getAuthorizedUser client databaseId contextUserId
+                
+                do! checkAdminRole authorizedUser
+                
                 let uri = getDocumentUri databaseId collectionId entityId
                 let ok _ = ()
 
                 return! client.DeleteDocumentAsync(uri) |> Result.fromTask ok
             }
 
-        executeTask opts collectionId task
+        executeTask request.Options collectionId task
 
     let internal find<'T> (opts: StorageOptions) collectionId entityId =
 
@@ -109,7 +139,7 @@ module EntityManager =
             return! client.ReplaceDocumentAsync(uri, entity) |> Result.fromTask ok
         }
 
-    let internal propertyValueExists (client: DocumentClient) databaseId collectionId (propertyName : string) propertyValue = 
+    let internal hasPropertyValue (client: DocumentClient) databaseId collectionId (propertyName : string) propertyValue = 
         result {
             let uri = getDocumentCollectionUri databaseId collectionId
             let collection = CollectionId.Value collectionId
@@ -125,28 +155,43 @@ module EntityManager =
                 |> Option.exists predicate
         }
 
-    let internal getAuthorizedUser (client: DocumentClient) databaseId id =
-        result {
-            let uri = getDocumentCollectionUri databaseId CollectionId.User
-
-            let sql = 
-                ContextUserId.value id 
-                |> sprintf "SELECT * FROM UserCollection WHERE UserCollection.id = '%s'"
-            
-            return!
-                client.CreateDocumentQuery<User>(uri, sql).ToArray()
-                |> Array.tryHead
-                |> Result.ofOption "Context User not found - Unauthorized!"
-        }
-
 [<RequireQualifiedAccess>]
 module VisitorManager =
 
     let getAgeGroups () =
-        Visitor.AgeGroupLookup()
+        EntityHelper.AgeGroupLookup()
 
     let getStatusList () = 
-        Visitor.StatusLookup()
+        EntityHelper.StatusLookup()
+
+    let find opts =
+        EntityManager.find<Visitor> opts CollectionId.Visitor
+
+    let delete request =
+        EntityManager.delete request CollectionId.Visitor
+
+    let search (request : VisitorSearchRequest) =
+        
+        let task (client : DocumentClient) databaseId collectionId =
+            result {
+                let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
+
+                if String.IsNullOrEmpty(request.Text) then
+                    return [||]
+                else
+                    let sql = 
+                        String.Format(@"SELECT TOP 25 
+                                            id, fullName, statusId, ageGroupId
+                                        FROM VisitorCollection 
+                                        WHERE VisitorCollection.fullName 
+                                        LIKE '%{0}%'", 
+                            request.Text)
+
+                    return 
+                        client.CreateDocumentQuery<VisitorSearch>(uri, sql).ToArray()
+            }
+
+        EntityManager.executeTask request.Options CollectionId.Visitor task
 
 [<RequireQualifiedAccess>]
 module UserManager =
@@ -160,35 +205,37 @@ module UserManager =
         |> Result.map getValue
 
     let getRoles () = 
-        User.RoleLookup()
+        EntityHelper.RoleLookup()
 
     let find opts =
         EntityManager.find<ReadonlyUser> opts CollectionId.User
 
-    let resetPassword (request : ResetPassword) =
+    let delete request =
+        EntityManager.delete request CollectionId.Visitor
+
+    let resetPassword (request : ResetPasswordRequest) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
                 let! contextUserId = ContextUserId.create request.ContextUserId
                 let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
                 
-                match authorizedUser.RoleId with
-                    | UserRoleEnum.Admin ->
-                        let! validPassword = Password.create "Default Password" request.Password
-                        let! (HashedPassword password) = Password.apply HashProvider.hash validPassword
-                        
-                        let! entityId = EntityId.create request.UserId
-                        let! entity = EntityManager.find<User> request.Options collectionId entityId
-                        
-                        entity.Password <- password
+                do! EntityManager.checkAdminRole authorizedUser
 
-                        return! EntityManager.replace client databaseId collectionId entityId entity 
-                    | _ -> return! Result.Error "You are not authorized to reset passwords"
+                let! validPassword = Password.create "Default Password" request.Password
+                let! (HashedPassword password) = Password.apply HashProvider.hash validPassword
+                
+                let! entityId = EntityId.create request.UserId
+                let! entity = EntityManager.find<User> request.Options collectionId entityId
+                
+                entity.Password <- password
+
+                return! EntityManager.replace client databaseId collectionId entityId entity 
             }
 
         EntityManager.executeTask request.Options CollectionId.User task
 
-    let updatePassword (request : UpdatePassword) =
+    let updatePassword (request : UpdatePasswordRequest) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
@@ -212,7 +259,7 @@ module UserManager =
 
         EntityManager.executeTask request.Options CollectionId.User task
 
-    let authenticate (request : Authenticate) =
+    let authenticate (request : AuthenticateUserRequest) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
@@ -247,12 +294,14 @@ module UserManager =
         
         EntityManager.executeTask opts CollectionId.User task
 
-    let update (request : UpdateUser) =
+    let update (request : UpdateUserRequest) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
                 let! contextUserId = ContextUserId.create request.ContextUserId
-                let! _ = EntityManager.getAuthorizedUser client databaseId contextUserId
+                let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
+
+                do! EntityManager.checkEditorRole authorizedUser
 
                 let! validDisplayName = String254.create "Display Name" request.Model.DisplayName
 
@@ -267,19 +316,21 @@ module UserManager =
         
         EntityManager.executeTask request.Options CollectionId.User task
 
-    let create (request : CreateUser) =
+    let create (request : CreateUserRequest) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
                 let! contextUserId = ContextUserId.create request.ContextUserId
-                let! _ = EntityManager.getAuthorizedUser client databaseId contextUserId
+                let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
+
+                do! EntityManager.checkEditorRole authorizedUser
 
                 let! validEmailAddress = EmailAddress.create request.Model.EmailAddress
                 let emailAddress = EmailAddress.value validEmailAddress
 
-                let! valueExists = EntityManager.propertyValueExists client databaseId collectionId "emailAddress" emailAddress
+                let! hasPropertyValue = EntityManager.hasPropertyValue client databaseId collectionId "emailAddress" emailAddress
 
-                if valueExists then
+                if hasPropertyValue then
                     return! sprintf "User with email address of '%s' already exists" emailAddress |> Result.Error 
                 else
                     let! validDisplayName = String254.create "Display Name" request.Model.DisplayName

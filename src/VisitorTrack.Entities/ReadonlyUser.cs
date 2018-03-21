@@ -11,6 +11,8 @@ namespace VisitorTrack.Entities
 
         public UserRoleEnum RoleId { get; set; }
 
+        public string RoleName => RoleId.ToString();
+
         public string DisplayName { get; set; }
     }
 }

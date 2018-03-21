@@ -30,35 +30,46 @@ module CustomTypes =
         AccountKey: string
     }
 
-    type ResetPassword = {
+    type ResetPasswordRequest = {
         Options: StorageOptions
         ContextUserId: string
         UserId: string
         Password: string
     }
 
-    type UpdatePassword = {
+    type UpdatePasswordRequest = {
         Options: StorageOptions
         ContextUserId: string
         Model: UpdateUserPassword
     }
 
-    type Authenticate = {
+    type AuthenticateUserRequest = {
         Options: StorageOptions
         Model: AuthenticateUser
     }
 
-    type UpdateUser = {
+    type UpdateUserRequest = {
         Options: StorageOptions
         ContextUserId: string
         UserId: string
         Model: User
     }
 
-    type CreateUser = {
+    type CreateUserRequest = {
         Options: StorageOptions
         ContextUserId: string
         Model: User
+    }
+
+    type VisitorSearchRequest = {
+        Options: StorageOptions
+        Text: string
+    }
+
+    type DeleteEntityRequest = {
+        Options: StorageOptions
+        ContextUserId: string
+        EntityId: string
     }
 
     type CollectionId =

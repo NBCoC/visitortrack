@@ -26,14 +26,14 @@ module Extensions =
 
     type HttpRequestMessage with
 
-        member this.TryGetHeaderValue (name: string) =
+        member this.TryGetHeaderValue (name : string) =
 
             if this.Headers.Contains(name) then
                 this.Headers.GetValues(name)
                 |> Seq.tryHead 
             else None
 
-        member this.TryGetQueryStringValue (key: string) =
+        member this.TryGetQueryStringValue (key : string) =
 
             let queryStringValue (item: KeyValuePair<string, string>) =
                 if String.Compare(item.Key, key, true) = 0 then
@@ -62,20 +62,21 @@ module Utility =
     open VisitorTrack.EntityManager.Extensions
 
     let validateToken (req : HttpRequestMessage) =
+        let headerName = "X-Visitor-Track-Token"
 
         let validate (token : string) =
             if token = Settings.getToken() then
                 Result.Ok ()
             else Result.Error "Invalid token"
 
-        req.TryGetHeaderValue "VISITOR-TRACK-TOKEN"
-        |> Result.ofOption "HTTP Header is required - 'VISITOR-TRACK-TOKEN'"
+        req.TryGetHeaderValue headerName
+        |> Result.ofOption (sprintf "%s HTTP header is required" headerName)
         |> Result.bind validate
 
     let getContextUserId (req : HttpRequestMessage) =
-        req.TryGetQueryStringValue "userId"
+        req.TryGetQueryStringValue "contextUserId"
         |> Option.defaultValue String.Empty
 
     let getEntityId (req : HttpRequestMessage) =
-        req.TryGetQueryStringValue "id"
+        req.TryGetQueryStringValue "entityId"
         |> Option.defaultValue String.Empty

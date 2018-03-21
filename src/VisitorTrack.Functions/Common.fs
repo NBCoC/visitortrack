@@ -1,7 +1,7 @@
 namespace VisitorTrack.Functions
 
 open System
-open VisitorTrack.EntityManager.DataTypes
+open VisitorTrack.EntityManager.CustomTypes
 open System.Collections.Generic
 open System.Net.Http
 open Newtonsoft.Json
@@ -9,11 +9,10 @@ open Newtonsoft.Json
 [<RequireQualifiedAccess>]
 module Settings =
 
-    let getStorageOptions collectionId = {
+    let getStorageOptions () = {
         AccountKey = Environment.GetEnvironmentVariable("DbAccountKey")
         EndpointUrl = Environment.GetEnvironmentVariable("DbEndpointUrl")
         DatabaseId = Environment.GetEnvironmentVariable("DbName")
-        CollectionId = collectionId
     }
 
     let getDefaultPassword () =
@@ -26,6 +25,13 @@ module Settings =
 module Extensions =
 
     type HttpRequestMessage with
+
+        member this.TryGetHeaderValue (name: string) =
+
+            if this.Headers.Contains(name) then
+                this.Headers.GetValues(name)
+                |> Seq.tryHead 
+            else None
 
         member this.TryGetQueryStringValue (key: string) =
 
@@ -50,3 +56,26 @@ module Extensions =
 
                 return result
             }
+
+[<RequireQualifiedAccess>]
+module Utility =
+    open VisitorTrack.EntityManager.Extensions
+
+    let validateToken (req : HttpRequestMessage) =
+
+        let validate (token : string) =
+            if token = Settings.getToken() then
+                Result.Ok ()
+            else Result.Error "Invalid token"
+
+        req.TryGetHeaderValue "VISITOR-TRACK-TOKEN"
+        |> Result.ofOption "HTTP Header is required - 'VISITOR-TRACK-TOKEN'"
+        |> Result.bind validate
+
+    let getContextUserId (req : HttpRequestMessage) =
+        req.TryGetQueryStringValue "userId"
+        |> Option.defaultValue String.Empty
+
+    let getEntityId (req : HttpRequestMessage) =
+        req.TryGetQueryStringValue "id"
+        |> Option.defaultValue String.Empty

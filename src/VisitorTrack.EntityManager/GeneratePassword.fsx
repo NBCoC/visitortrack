@@ -1,9 +1,7 @@
-namespace VisitorTrack.EntityManager
 
 open System.Security.Cryptography
 open System.Text
 open System
-open CustomTypes
 
 module HashProvider =
 
@@ -18,5 +16,4 @@ module HashProvider =
             let hashed = provider.ComputeHash(data)
             
             Convert.ToBase64String(hashed) 
-            |> HashedPassword 
             |> Ok

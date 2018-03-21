@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Include="Common.fs" />
     <Compile Include="UserFunctions.fs" />
+    <Compile Include="VisitorFunctions.fs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\VisitorTrack.Entities\VisitorTrack.Entities.csproj" />
     <ProjectReference Include="..\VisitorTrack.EntityManager\VisitorTrack.EntityManager.fsproj" />
   </ItemGroup>
 

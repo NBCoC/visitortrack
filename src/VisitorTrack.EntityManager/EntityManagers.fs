@@ -4,36 +4,42 @@ open System
 open System.Linq
 open Microsoft.Azure.Documents
 open Microsoft.Azure.Documents.Client
-open VisitorTrack.Entities.Models
-open VisitorTrack.Entities.Dtos
-open DataTypes
 open CustomTypes
 open VisitorTrack.EntityManager.Extensions
+open VisitorTrack.Entities
+
+[<RequireQualifiedAccess>]
+module HashProvider =
+    open System.Security.Cryptography
+    open System.Text
+
+    let hash str =
+        if String.IsNullOrEmpty(str) then
+            Result.Error "Value is required for hashing"
+        else
+            let postSalt = "_buffer_9#00!#8423-12834)*@$920*"
+            let preSalt = "visitor_track_salt_"
+            let data = Encoding.UTF8.GetBytes(sprintf "%s%s%s" preSalt str postSalt)
+            use provider = new SHA256CryptoServiceProvider()
+            let hashed = provider.ComputeHash(data)
+            
+            Convert.ToBase64String(hashed) 
+            |> HashedPassword 
+            |> Result.Ok
 
 [<RequireQualifiedAccess>]
 module EntityManager =
 
-    let getDatabaseUri databaseId =
+    let internal getDatabaseUri databaseId =
         UriFactory.CreateDatabaseUri(DatabaseId.value databaseId)
 
-    let getDocumentCollectionUri databaseId collectionId =
+    let internal getDocumentCollectionUri databaseId collectionId =
         UriFactory.CreateDocumentCollectionUri(DatabaseId.value databaseId, CollectionId.Value collectionId)
 
-    let getDocumentUri databaseId collectionId entityId = 
-        result {
-
-            let validateEntityId entityId =
-                let (EntityId id) = entityId
-                if String.IsNullOrEmpty(id) then
-                    Result.Error "Entity ID is required"
-                else Result.Ok entityId
-
-            let! (EntityId id) = validateEntityId entityId
-
-            return UriFactory.CreateDocumentUri(DatabaseId.value databaseId, CollectionId.Value collectionId, id)
-        }
-
-    let executeTask (opts: StorageOptions) task = 
+    let internal getDocumentUri databaseId collectionId entityId = 
+        UriFactory.CreateDocumentUri(DatabaseId.value databaseId, CollectionId.Value collectionId, EntityId.value entityId)
+        
+    let internal executeTask (opts: StorageOptions) collectionId task = 
         result {
             let! endpointUrl = EndpointUrl.create opts.EndpointUrl
             let! accountKey = AccountKey.create opts.AccountKey
@@ -43,14 +49,16 @@ module EntityManager =
             let createDatabase (client: DocumentClient) databaseId =
                 let database = Database(Id = DatabaseId.value databaseId)
                 
-                client.CreateDatabaseIfNotExistsAsync(database) |> Result.fromTask ok
+                client.CreateDatabaseIfNotExistsAsync(database) 
+                |> Result.fromTask ok
 
             let createCollection (client: DocumentClient) databaseId =
                 let uri = getDatabaseUri databaseId
-                let collection = DocumentCollection(Id = CollectionId.Value opts.CollectionId)
+                let collection = DocumentCollection(Id = CollectionId.Value collectionId)
                 let options = RequestOptions (OfferThroughput = Nullable<int>(2500) )
 
-                client.CreateDocumentCollectionIfNotExistsAsync(uri, collection, options) |> Result.fromTask ok
+                client.CreateDocumentCollectionIfNotExistsAsync(uri, collection, options) 
+                |> Result.fromTask ok
 
             let uri = Uri(EndpointUrl.value endpointUrl)
             use client = new DocumentClient(uri, AccountKey.value accountKey)
@@ -58,57 +66,58 @@ module EntityManager =
             do! createDatabase client databaseId
             do! createCollection client databaseId
 
-            return! task client databaseId opts.CollectionId
+            return! task client databaseId collectionId
         }
 
-    let insert entity (client: DocumentClient) databaseId collectionId =
+    let internal insert (client: DocumentClient) databaseId collectionId entity =
         let uri = getDocumentCollectionUri databaseId collectionId
-        let ok (response: ResourceResponse<Document>) = response.Resource.Id |> EntityId
+        let ok (response: ResourceResponse<Document>) = response.Resource.Id
 
-        client.CreateDocumentAsync(uri, entity) |> Result.fromTask ok
+        client.CreateDocumentAsync(uri, entity) 
+        |> Result.fromTask ok
+        |> Result.bind EntityId.create
 
-    let delete (opts: StorageOptions) entityId =
+    let delete (opts: StorageOptions) collectionId entityId =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! uri = getDocumentUri databaseId collectionId entityId
+                let uri = getDocumentUri databaseId collectionId entityId
                 let ok _ = ()
 
                 return! client.DeleteDocumentAsync(uri) |> Result.fromTask ok
             }
 
-        executeTask opts task
+        executeTask opts collectionId task
 
-    let find<'T> (opts: StorageOptions) entityId =
+    let internal find<'T> (opts: StorageOptions) collectionId entityId =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! uri = getDocumentUri databaseId collectionId entityId
+                let uri = getDocumentUri databaseId collectionId entityId
                 let ok (response: DocumentResponse<'T>) = response.Document
 
                 return! client.ReadDocumentAsync<'T>(uri) |> Result.fromTask ok
             }
 
-        executeTask opts task
+        executeTask opts collectionId task
 
-    let replace entityId (entity: #IEntity) (client: DocumentClient) databaseId collectionId = 
+    let internal replace (client: DocumentClient) databaseId collectionId entityId entity = 
         result {
-            let! uri = getDocumentUri databaseId collectionId entityId
+            let uri = getDocumentUri databaseId collectionId entityId
             let ok _ = ()
 
             return! client.ReplaceDocumentAsync(uri, entity) |> Result.fromTask ok
         }
 
-    let propertyValueExists (client: DocumentClient) databaseId collectionId propertyName propertyValue = 
+    let internal propertyValueExists (client: DocumentClient) databaseId collectionId (propertyName : string) propertyValue = 
         result {
             let uri = getDocumentCollectionUri databaseId collectionId
             let collection = CollectionId.Value collectionId
-            let sqlPropertyName = SqlPropertyName.Value propertyName
             let predicate _ = true
 
             let sql = 
                 String.Format("SELECT * FROM {0} WHERE {0}.{1} = '{2}'", 
-                    collection, sqlPropertyName, propertyValue)
+                    collection, propertyName, propertyValue)
             
             return
                 client.CreateDocumentQuery(uri, sql).ToArray()
@@ -116,155 +125,178 @@ module EntityManager =
                 |> Option.exists predicate
         }
 
+    let internal getAuthorizedUser (client: DocumentClient) databaseId id =
+        result {
+            let uri = getDocumentCollectionUri databaseId CollectionId.User
+
+            let sql = 
+                ContextUserId.value id 
+                |> sprintf "SELECT * FROM UserCollection WHERE UserCollection.id = '%s'"
+            
+            return!
+                client.CreateDocumentQuery<User>(uri, sql).ToArray()
+                |> Array.tryHead
+                |> Result.ofOption "Context User not found - Unauthorized!"
+        }
+
+[<RequireQualifiedAccess>]
+module VisitorManager =
+
+    let getAgeGroups () =
+        Visitor.AgeGroupLookup()
+
+    let getStatusList () = 
+        Visitor.StatusLookup()
+
 [<RequireQualifiedAccess>]
 module UserManager =
 
-    let canonicalizeRole role =
-        match role with
-        | UserRoleEnum.Admin | UserRoleEnum.Editor -> role
-        | _ -> UserRoleEnum.Viewer
+    let private validateDefaultPassword (DefaultPassword password) =
+        let getValue value = 
+            Password.value value 
+            |> DefaultPassword
 
-    let validateDefaultPassword (DefaultPassword password) =
-        let getValue value = String15.value value |> DefaultPassword
-
-        String15.create DefaultPasswordProperty password
+        Password.create "Default Password" password
         |> Result.map getValue
 
-    let getHashedPasswordValue (HashedPassword x) = x
+    let getRoles () = 
+        User.RoleLookup()
 
-    let resetPassword (opts: StorageOptions) entityId defaultPassword =
+    let find opts =
+        EntityManager.find<ReadonlyUser> opts CollectionId.User
+
+    let resetPassword (request : ResetPassword) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! (DefaultPassword validPassword) = validateDefaultPassword defaultPassword
-                let! hashedPassword = HashProvider.hash validPassword
-                let (HashedPassword password) = hashedPassword
-
-                let! entity = EntityManager.find<User> opts entityId
+                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
                 
-                entity.Password <- password
+                match authorizedUser.RoleId with
+                    | UserRoleEnum.Admin ->
+                        let! validPassword = Password.create "Default Password" request.Password
+                        let! (HashedPassword password) = Password.apply HashProvider.hash validPassword
+                        
+                        let! entityId = EntityId.create request.UserId
+                        let! entity = EntityManager.find<User> request.Options collectionId entityId
+                        
+                        entity.Password <- password
 
-                return! EntityManager.replace entityId entity client databaseId collectionId
+                        return! EntityManager.replace client databaseId collectionId entityId entity 
+                    | _ -> return! Result.Error "You are not authorized to reset passwords"
             }
 
-        EntityManager.executeTask opts task
+        EntityManager.executeTask request.Options CollectionId.User task
 
-    let updatePassword (opts: StorageOptions) entityId (dto: UpdateUserPasswordDto) =
+    let updatePassword (request : UpdatePassword) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! validOldPassword = String15.create OldPasswordProperty dto.OldPassword
-                let! validNewPassword = String15.create NewPasswordProperty dto.NewPassword
+                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
 
-                let! hashedOldPassword = String15.apply HashProvider.hash validOldPassword
-                let! hashedNewPassword = String15.apply HashProvider.hash validNewPassword
+                let! validOldPassword = Password.create "Old Password" request.Model.OldPassword
+                let! validNewPassword = Password.create "New Password" request.Model.NewPassword
 
-                let (HashedPassword oldPsw) = hashedOldPassword
-                let (HashedPassword newPsw) = hashedNewPassword
+                let! (HashedPassword hashedNewPassword) = Password.apply HashProvider.hash validNewPassword
 
-                let! valueExists = EntityManager.propertyValueExists client databaseId collectionId PasswordSqlProperty oldPsw
-
-                if String15.equals validOldPassword validNewPassword then
+                if Password.equals validOldPassword validNewPassword then
                     return! Result.Error "Old Password must be different than New Password"
-                elif valueExists |> not then
-                    return! Result.Error "Old Password is incorrect"
                 else
-                    let! entity = EntityManager.find<User> opts entityId
-                
-                    entity.Password <- newPsw
+                    let! entityId = EntityId.create authorizedUser.Id
 
-                    return! EntityManager.replace entityId entity client databaseId collectionId
+                    authorizedUser.Password <- hashedNewPassword
+                    
+                    return! EntityManager.replace client databaseId collectionId entityId authorizedUser 
             }
 
-        EntityManager.executeTask opts task
+        EntityManager.executeTask request.Options CollectionId.User task
 
-    let authenticate (opts: StorageOptions) (dto: AuthenticateUserDto) =
+    let authenticate (request : Authenticate) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! validEmailAddress = EmailAddress.create dto.EmailAddress
-                let! validPassword = String15.create PasswordProperty dto.Password
-                let! hashedPassword = String15.apply HashProvider.hash validPassword
+                let! validEmailAddress = EmailAddress.create request.Model.EmailAddress
+                let! validPassword = Password.create "Password" request.Model.Password
+                let! (HashedPassword hashedPassword) = Password.apply HashProvider.hash validPassword
 
                 let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
-                let emailAddress = EmailAddress.value validEmailAddress
-                let password = getHashedPasswordValue hashedPassword
-                let collection = CollectionId.Value collectionId
-                let emailAddressPropertyName = SqlPropertyName.Value EmailAddressSqlProperty
-                let passwordPropertyName = SqlPropertyName.Value PasswordSqlProperty
 
                 let sql = 
-                    String.Format("SELECT * FROM {0} WHERE {0}.{1} = '{2}' AND {0}.{3} = '{4}'", 
-                        collection, emailAddressPropertyName, emailAddress, passwordPropertyName, password)
-
-                let toDto (user: User) =
-                    UserAuthenticatedDto (
-                        Id = user.Id,
-                        DisplayName = user.DisplayName,
-                        EmailAddress = user.EmailAddress,
-                        RoleId = user.RoleId
-                    )
+                    String.Format(@"SELECT * FROM UserCollection 
+                                    WHERE UserCollection.emailAddress = '{0}' 
+                                    AND UserCollection.password = '{1}'", 
+                         EmailAddress.value validEmailAddress, hashedPassword)
 
                 return! 
-                    client.CreateDocumentQuery<User>(uri, sql).ToArray()
+                    client.CreateDocumentQuery<ReadonlyUser>(uri, sql).ToArray()
                     |> Array.tryHead
-                    |> Option.map toDto
-                    |> Result.ofOption (sprintf "User with email address of '%s' not found or password is incorrect" emailAddress)
+                    |> Result.ofOption (sprintf "User with email address of '%s' not found or password is incorrect" (EmailAddress.value validEmailAddress))
             }
 
-        EntityManager.executeTask opts task
+        EntityManager.executeTask request.Options CollectionId.User task
 
     let getAll (opts: StorageOptions) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
                 let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
-                return client.CreateDocumentQuery<UserDto>(uri).ToArray()
+
+                return client.CreateDocumentQuery<ReadonlyUser>(uri).ToArray()
             }
         
-        EntityManager.executeTask opts task
+        EntityManager.executeTask opts CollectionId.User task
 
-    let update (opts: StorageOptions) entityId (dto: UpsertUserDto) =
+    let update (request : UpdateUser) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! validDisplayName = String75.create DisplayNameProperty dto.DisplayName
-                let! entity = EntityManager.find<User> opts entityId
+                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! _ = EntityManager.getAuthorizedUser client databaseId contextUserId
+
+                let! validDisplayName = String254.create "Display Name" request.Model.DisplayName
+
+                let! entityId = EntityId.create request.UserId
+                let! entity = EntityManager.find<ReadonlyUser> request.Options collectionId entityId
+
+                entity.DisplayName <- String254.value validDisplayName
+                entity.RoleId <- request.Model.RoleId
                 
-                entity.DisplayName <- String75.value validDisplayName
-                entity.RoleId <- canonicalizeRole dto.RoleId
-
-                return! EntityManager.replace entityId entity client databaseId collectionId
+                return! EntityManager.replace client databaseId collectionId entityId entity 
             }
         
-        EntityManager.executeTask opts task
+        EntityManager.executeTask request.Options CollectionId.User task
 
-    let create (opts: StorageOptions) defaultPassword (dto: UpsertUserDto) =
+    let create (request : CreateUser) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! validEmailAddress = EmailAddress.create dto.EmailAddress
+                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! _ = EntityManager.getAuthorizedUser client databaseId contextUserId
+
+                let! validEmailAddress = EmailAddress.create request.Model.EmailAddress
                 let emailAddress = EmailAddress.value validEmailAddress
-                let! valueExists = EntityManager.propertyValueExists client databaseId collectionId EmailAddressSqlProperty emailAddress
+
+                let! valueExists = EntityManager.propertyValueExists client databaseId collectionId "emailAddress" emailAddress
 
                 if valueExists then
                     return! sprintf "User with email address of '%s' already exists" emailAddress |> Result.Error 
                 else
-                    let! validDisplayName = String75.create DisplayNameProperty dto.DisplayName
-                    let! (DefaultPassword password) = validateDefaultPassword defaultPassword
-                    let! validPassword = password |> HashProvider.hash
+                    let! validDisplayName = String254.create "Display Name" request.Model.DisplayName
+                    let! password = Password.create "Password" request.Model.Password
+                    let! (HashedPassword validPassword) = Password.apply HashProvider.hash password
 
-                    let entity = 
+                    let user = 
                         User (
-                            DisplayName = String75.value validDisplayName,
-                            EmailAddress = EmailAddress.value validEmailAddress,
-                            Password = getHashedPasswordValue validPassword,
-                            RoleId = canonicalizeRole dto.RoleId
+                            DisplayName = String254.value validDisplayName,
+                            EmailAddress = emailAddress,
+                            Password = validPassword,
+                            RoleId = request.Model.RoleId
                         )
 
-                    return! EntityManager.insert entity client databaseId collectionId
+                    return! EntityManager.insert client databaseId collectionId user 
             }
 
-        EntityManager.executeTask opts task
+        EntityManager.executeTask request.Options CollectionId.User task
 
     

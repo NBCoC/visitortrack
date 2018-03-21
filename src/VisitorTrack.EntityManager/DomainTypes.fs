@@ -1,8 +1,8 @@
 namespace VisitorTrack.EntityManager
 
-open System
-
 module CustomTypes =
+    open System
+    open VisitorTrack.Entities
 
     type DatabaseId = private DatabaseId of string
 
@@ -12,60 +12,91 @@ module CustomTypes =
 
     type String254 = private String254 of string
 
-    type String75 = private String75 of string
-
-    type String15 = private String15 of string
-
     type EmailAddress = private EmailAddress of string
+
+    type Password = private Password of string
 
     type DefaultPassword = DefaultPassword of string
 
     type HashedPassword = HashedPassword of string
 
-    type EntityId =  EntityId of string
+    type EntityId = private EntityId of string
 
-    type Token = Token of string
+    type ContextUserId = private ContextUserId of string
+
+    type StorageOptions = {
+        DatabaseId: string
+        EndpointUrl: string
+        AccountKey: string
+    }
+
+    type ResetPassword = {
+        Options: StorageOptions
+        ContextUserId: string
+        UserId: string
+        Password: string
+    }
+
+    type UpdatePassword = {
+        Options: StorageOptions
+        ContextUserId: string
+        Model: UpdateUserPassword
+    }
+
+    type Authenticate = {
+        Options: StorageOptions
+        Model: AuthenticateUser
+    }
+
+    type UpdateUser = {
+        Options: StorageOptions
+        ContextUserId: string
+        UserId: string
+        Model: User
+    }
+
+    type CreateUser = {
+        Options: StorageOptions
+        ContextUserId: string
+        Model: User
+    }
 
     type CollectionId =
-        | UserCollection
-        | VisitorCollection
+        | User
+        | Visitor
             with static member Value collectionId =
                     match collectionId with
-                        | UserCollection -> "UserCollection"
-                        | VisitorCollection -> "VisitorCollection"
-
-    type SqlPropertyName =
-        | EmailAddressSqlProperty
-        | PasswordSqlProperty
-            with static member Value propertyName =
-                    match propertyName with
-                        | EmailAddressSqlProperty -> "EmailAddress"
-                        | PasswordSqlProperty -> "Password"
-
-    type PropertyName =
-        | DefaultPasswordProperty
-        | DisplayNameProperty
-        | EmailAddressProperty
-        | PasswordProperty
-        | OldPasswordProperty
-        | NewPasswordProperty
-            with static member Value propertyName =
-                    match propertyName with
-                        | DefaultPasswordProperty -> "Default Password"
-                        | DisplayNameProperty -> "Display Name"
-                        | EmailAddressProperty -> "Email Address"
-                        | PasswordProperty -> "Password"
-                        | OldPasswordProperty -> "Old Password"
-                        | NewPasswordProperty -> "New Password"
+                        | User -> "UserCollection"
+                        | Visitor -> "VisitorCollection"
 
     let private create propertyName length dataType value =
-        let propName = PropertyName.Value propertyName
-
         if String.IsNullOrEmpty(value) then
-            sprintf "%s is required" propName |> Error
+            sprintf "%s is required" propertyName |> Error
         elif value.Length > length then
-            sprintf "%s cannot be longer than %i characters" propName length |> Error
+            sprintf "%s cannot be longer than %i characters" propertyName length |> Error
         else dataType value |> Ok
+
+    module EntityId =
+        
+        let create str =
+            if String.IsNullOrEmpty(str) then
+                Error "Entity ID is required"
+            else EntityId str |> Ok
+
+        let apply f (EntityId x) = f x
+
+        let value x = apply id x
+
+    module ContextUserId =
+        
+        let create str =
+            if String.IsNullOrEmpty(str) then
+                Error "Context User ID is required"
+            else ContextUserId str |> Ok
+
+        let apply f (ContextUserId x) = f x
+
+        let value x = apply id x
 
     module DatabaseId =
         
@@ -112,29 +143,18 @@ module CustomTypes =
         let equals (String254 x) (String254 y) =
             x = y
 
-    module String75 =
+    module Password =
         
         let create propertyName value =
-            create propertyName 75 String75 value
+            create propertyName 15 Password value
 
-        let apply f (String75 x) = f x
+        let apply f (Password x) = f x
 
         let value x = apply id x
 
-        let equals (String75 x) (String75 y) =
+        let equals (Password x) (Password y) =
             x = y
 
-    module String15 =
-        
-        let create propertyName value =
-            create propertyName 15 String15 value
-
-        let apply f (String15 x) = f x
-
-        let value x = apply id x
-
-        let equals (String15 x) (String15 y) =
-            x = y
 
     module EmailAddress =
         
@@ -147,21 +167,14 @@ module CustomTypes =
                     value.ToLower().Trim() |> EmailAddress |> Ok 
                 else Error "Email Address must contain an '@' sign"
 
-            String254.create EmailAddressProperty value
+            String254.create "Email Address" value
             |> Result.bind validate
 
         let apply f (EmailAddress x) = f x
 
         let value x = apply id x
 
+        let equals (EmailAddress x) (EmailAddress y) =
+            x = y
 
-[<AutoOpen>]
-module DataTypes =
-    open CustomTypes
-
-    type StorageOptions = {
-        DatabaseId: string
-        EndpointUrl: string
-        AccountKey: string
-        CollectionId: CollectionId
-    }
+   

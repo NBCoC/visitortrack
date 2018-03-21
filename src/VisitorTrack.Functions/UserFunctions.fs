@@ -8,8 +8,8 @@ open Microsoft.Azure.WebJobs.Host
 open Microsoft.Azure.WebJobs.Extensions.Http
 open VisitorTrack.EntityManager
 open VisitorTrack.EntityManager.CustomTypes
-open VisitorTrack.Entities.Dtos
 open VisitorTrack.EntityManager.Extensions
+open VisitorTrack.Entities
 
 module UpdateUser =
 
@@ -18,19 +18,26 @@ module UpdateUser =
         async {
             log.Info(sprintf "Executing UpdateUser func...")
 
-            let storageOptions = Settings.getStorageOptions UserCollection
-            let! dto = req.TryGetDto<UpsertUserDto>()
-            let entityId =
-                req.TryGetQueryStringValue "id" 
-                |> Option.defaultValue (String.Empty)
-                |> EntityId
+            let! payload = req.TryGetDto<User>()
+            
+            let toRequest (model : User) : UpdateUser = {
+                UserId = Utility.getEntityId req
+                ContextUserId = Utility.getContextUserId req
+                Options = Settings.getStorageOptions ()
+                Model = model
+            }
+
+            let createRequest () =
+                Result.ofOption "DTO payload is required" payload
+                |> Result.map toRequest
 
             let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return
-                Result.ofOption "DTO payload is required" dto
-                |> Result.bind (UserManager.update storageOptions entityId)
+                Utility.validateToken req
+                |> Result.bind createRequest
+                |> Result.bind UserManager.update
                 |> Result.either ok error
                 
         } |> Async.RunSynchronously
@@ -42,17 +49,27 @@ module CreateUser =
         async {
             log.Info(sprintf "Executing CreateUser func...")
 
-            let defaultPassword = Settings.getDefaultPassword()
-            let storageOptions = Settings.getStorageOptions UserCollection
-            let! dto = req.TryGetDto<UpsertUserDto>()
+            let! payload = req.TryGetDto<User>()
 
-            let password = DefaultPassword defaultPassword
-            let ok (EntityId id) = req.CreateResponse(HttpStatusCode.OK, id)
+            let toRequest (model : User) : CreateUser = 
+                model.Password <- Settings.getDefaultPassword()
+                {
+                    Options = Settings.getStorageOptions ()
+                    ContextUserId = Utility.getContextUserId req
+                    Model = model
+                }
+
+            let createRequest () =
+                Result.ofOption "DTO payload is required" payload
+                |> Result.map toRequest
+
+            let ok entityId = req.CreateResponse(HttpStatusCode.OK, EntityId.value entityId)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return
-                Result.ofOption "DTO payload is required" dto
-                |> Result.bind (UserManager.create storageOptions password)
+                Utility.validateToken req
+                |> Result.bind createRequest
+                |> Result.bind UserManager.create
                 |> Result.either ok error
 
         } |> Async.RunSynchronously
@@ -64,15 +81,19 @@ module DeleteUser =
         async {
             log.Info(sprintf "Executing DeleteUser func...")
 
-            let storageOptions = Settings.getStorageOptions UserCollection
+            let opts = Settings.getStorageOptions ()
             let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
-            return 
+            let createUserId () =
                 req.TryGetQueryStringValue "id" 
-                |> Option.map EntityId
                 |> Result.ofOption "User ID is required"
-                |> Result.bind (EntityManager.delete storageOptions)
+                |> Result.bind EntityId.create
+
+            return 
+                Utility.validateToken req
+                |> Result.bind createUserId
+                |> Result.bind (EntityManager.delete opts CollectionId.User)
                 |> Result.either ok error
                     
         } |> Async.RunSynchronously
@@ -84,15 +105,15 @@ module GetUser =
         async {
             log.Info(sprintf "Executing GetUser func...")
 
-            let storageOptions = Settings.getStorageOptions UserCollection
+            let opts = Settings.getStorageOptions ()
             let ok dto = req.CreateResponse(HttpStatusCode.OK, dto)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return 
                 req.TryGetQueryStringValue "id" 
-                |> Option.map EntityId
                 |> Result.ofOption "User ID is required"
-                |> Result.bind (EntityManager.find<UserDto> storageOptions)
+                |> Result.bind EntityId.create
+                |> Result.bind (UserManager.find opts)
                 |> Result.either ok error
                     
         } |> Async.RunSynchronously
@@ -104,12 +125,12 @@ module GetAllUsers =
         async {
             log.Info(sprintf "Executing GetAllUsers func...")
 
-            let storageOptions = Settings.getStorageOptions UserCollection
+            let opts = Settings.getStorageOptions ()
             let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return 
-                UserManager.getAll storageOptions
+                UserManager.getAll opts
                 |> Result.either ok error
                     
         } |> Async.RunSynchronously
@@ -121,17 +142,37 @@ module AuthenticateUser =
         async {
             log.Info(sprintf "Executing AuthenticateUser func...")
 
-            let storageOptions = Settings.getStorageOptions UserCollection
-            let! dto = req.TryGetDto<AuthenticateUserDto>()
+            let! payload = req.TryGetDto<AuthenticateUser>()
 
-            let ok (dto: UserAuthenticatedDto) = 
-                dto.Token <- Settings.getToken()
-                req.CreateResponse(HttpStatusCode.OK, dto)
+            let toRequest (model: AuthenticateUser) : Authenticate = {
+                Options = Settings.getStorageOptions ()
+                Model = model
+            }
+
+            let ok (model: ReadonlyUser) = 
+                let result = 
+                    UserAuthenticated (
+                        Token = Settings.getToken(),
+                        User = model
+                    )
+                req.CreateResponse(HttpStatusCode.OK, result)
             let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
             return
-                Result.ofOption "DTO payload is required" dto
-                |> Result.bind (UserManager.authenticate storageOptions)
+                Result.ofOption "DTO payload is required" payload
+                |> Result.map toRequest
+                |> Result.bind UserManager.authenticate
                 |> Result.either ok error
 
         } |> Async.RunSynchronously
+
+module GetUserRoles =
+
+    [<FunctionName("GetUserRolesHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+        log.Info(sprintf "Executing GetUserRoles func...")
+
+        let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
+
+        UserManager.getRoles ()
+        |> ok

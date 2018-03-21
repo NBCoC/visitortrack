@@ -1,5 +1,5 @@
 import template from './sign-in.html';
-import { authenticate, saveCredentialCache } from '../visitor-track-api';
+import { authenticate } from '../visitor-track-api';
 
 export default {
   template,
@@ -13,13 +13,17 @@ export default {
     signIn: function() {
       if (!this.email || !this.password) return;
 
-      authenticate(this.email, this.password).then(result => {
-        saveCredentialCache(result);
+      const model = {
+        emailAddress: this.email,
+        password: this.password
+      };
+
+      authenticate(model).then(result => {
         this.$store.dispatch('authenticate', {
           user: result.user,
           token: result.token
         });
-        this.$router.push('/');
+        this.$router.push('/home');
       });
     }
   }

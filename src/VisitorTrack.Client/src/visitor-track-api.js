@@ -16,27 +16,7 @@ export const getUserRoles = token =>
     .get('GetUserRolesHttpTrigger')
     .then(result => result.data);
 
-export const authenticate = (email, psw) =>
+export const authenticate = model =>
   getInstance()
-    .post('AuthenticateUserHttpTrigger', {
-      emailAddress: email,
-      password: psw
-    })
+    .post('AuthenticateUserHttpTrigger', model)
     .then(result => result.data);
-
-export const loadCredentialCache = () =>
-  typeof Storage === 'undefined'
-    ? {}
-    : JSON.parse(localStorage.getItem(CACHE_KEY));
-
-export const saveCredentialCache = (credentials) => {
-  if (typeof Storage === 'undefined') return;
-
-  localStorage.setItem(CACHE_KEY, JSON.stringify(credentials));
-};
-
-export const clearCredentialCache = () => {
-  if (typeof Storage === 'undefined') return;
-
-  localStorage.setItem(CACHE_KEY, {});
-};

@@ -1,7 +1,6 @@
 import Vue from 'Vue';
 import Navbar from './components/navbar';
 import ToggleNavbarBurger from './directives/toggle-navbar-burger';
-import { loadCredentialCache } from './visitor-track-api';
 
 Vue.component('navbar', Navbar);
 Vue.directive('toggle-navbar-burger', ToggleNavbarBurger);
@@ -27,13 +26,8 @@ export default {
       }
     });
 
-    const credentials = loadCredentialCache();
-
-    if (!credentials) {
-      that.$router.push('/sign-in');
-    } else {
-      that.$store.dispatch('authenticate', credentials);
-      that.$router.push('/home');
-    }
+    that.$store.getters.isAuthenticated
+      ? that.$router.push('/home')
+      : that.$router.push('/sign-in');
   }
 };

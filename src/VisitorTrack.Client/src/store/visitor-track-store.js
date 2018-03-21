@@ -1,16 +1,36 @@
 import Vue from 'Vue';
 import Vuex from 'Vuex';
 
+const CACHE_KEY = 'visitortrack.client.credential.cache';
+
+const loadCredentialCache = () =>
+  typeof Storage === 'undefined'
+    ? {}
+    : JSON.parse(localStorage.getItem(CACHE_KEY));
+
+const saveCredentialCache = value => {
+  if (typeof Storage !== 'undefined')
+    localStorage.setItem(CACHE_KEY, JSON.stringify(value));
+};
+
+const clearCredentialCache = () => {
+  if (typeof Storage !== 'undefined') localStorage.setItem(CACHE_KEY, {});
+};
+
 Vue.use(Vuex);
 
-const store = new Vuex.Store({
+const credentials = loadCredentialCache();
+
+export default new Vuex.Store({
   strict: true,
   state: {
-    user: {},
-    token: ''
+    user: credentials.user,
+    token: credentials.token
   },
   mutations: {
     authenticate: (state, payload) => {
+      saveCredentialCache(payload);
+
       state.user = payload.user;
       state.token = payload.token;
     }
@@ -31,5 +51,3 @@ const store = new Vuex.Store({
     }
   }
 });
-
-export default store;

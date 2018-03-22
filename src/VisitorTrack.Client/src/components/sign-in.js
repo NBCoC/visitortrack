@@ -1,16 +1,16 @@
 import template from './sign-in.html';
-import { authenticate } from '../visitor-track-api';
+import { authenticate } from '../api';
 
 export default {
   template,
-  data: () => {
+  data() {
     return {
       email: '',
       password: ''
     };
   },
   methods: {
-    signIn: function() {
+    signIn() {
       if (!this.email || !this.password) return;
 
       const model = {
@@ -19,10 +19,7 @@ export default {
       };
 
       authenticate(model).then(result => {
-        this.$store.dispatch('authenticate', {
-          user: result.user,
-          token: result.token
-        });
+        this.$store.dispatch('authenticate', result);
         this.$router.push('/home');
       });
     }

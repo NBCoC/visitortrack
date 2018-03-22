@@ -2,7 +2,7 @@ import template from './users.html';
 
 export default {
   template,
-  data: () => {
+  data() {
     return {
       message: 'Users Page'
     };

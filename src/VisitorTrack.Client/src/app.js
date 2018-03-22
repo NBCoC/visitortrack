@@ -1,4 +1,4 @@
-import Vue from 'Vue';
+import Vue from 'vue';
 import Navbar from './components/navbar';
 import ToggleNavbarBurger from './directives/toggle-navbar-burger';
 
@@ -11,22 +11,24 @@ export default {
     <router-view></router-view>
   </div>
   `,
-  created: function() {
+  created() {
     const that = this;
 
     that.$router.beforeEach((to, from, next) => {
-      const isAuthenticated = that.$store.getters.isAuthenticated;
+      const user = that.$store.getters.user;
 
       if (to.path === '/sign-in') {
-        isAuthenticated ? next(from.path) : next();
-      } else if (!isAuthenticated) {
+        user ? next(from.path) : next();
+      } else if (!user) {
         next('/sign-in');
+      } else if (to.meta.adminView && user.roleName !== 'Admin') {
+        next(false);
       } else {
         next();
       }
     });
 
-    that.$store.getters.isAuthenticated
+    that.$store.getters.user
       ? that.$router.push('/home')
       : that.$router.push('/sign-in');
   }

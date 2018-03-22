@@ -22,7 +22,7 @@
           <i class="fa fa-search"></i> Search
         </router-link>
       </div>
-      <div class="navbar-item">
+      <div class="navbar-item" v-if="displayUserLink">
         <router-link to="users">
           <i class="fa fa-users"></i> Users
         </router-link>
@@ -37,13 +37,19 @@
         </div>
         <div class="navbar-dropdown is-boxed">
           <div class="navbar-item">
-            <span>
-              <i class="fa fa-key"></i> Change Password</span>
+            <a>
+              <span>
+                <i class="fa fa-key"></i> Change Password
+              </span>
+            </a>
           </div>
           <hr class="navbar-divider">
           <div class="navbar-item">
-            <span>
-              <i class="fa fa-sign-out"></i> Sign Out</span>
+            <a @click="signOut">
+              <span>
+                <i class="fa fa-sign-out"></i> Sign Out
+              </span>
+            </a>
           </div>
         </div>
       </div>

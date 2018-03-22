@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-const CACHE_KEY = 'visitortrack.client.credential.cache';
 const USER_ID = 'contextUserId';
 const ID = 'entityId';
 

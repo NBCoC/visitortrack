@@ -1,6 +1,6 @@
-import Vue from 'Vue';
+import Vue from 'vue';
 import router from './router';
-import store from './store/visitor-track-store';
+import store from './store';
 import App from './app';
 
 new Vue({

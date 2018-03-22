@@ -8,7 +8,7 @@ export default {
     };
   },
   methods: {
-    sayHi: function() {
+    sayHi() {
       alert(this.message);
     }
   }

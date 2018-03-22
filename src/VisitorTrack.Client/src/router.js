@@ -1,5 +1,5 @@
-import Vue from 'Vue';
-import VueRouter from 'VueRouter';
+import Vue from 'vue';
+import VueRouter from 'vue-router';
 import Home from './components/home';
 import SignIn from './components/sign-in';
 import Search from './components/search';

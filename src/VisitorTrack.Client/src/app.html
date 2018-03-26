@@ -1,0 +1,46 @@
+<div v-mdl:layout class="mdl-layout--fixed-header ">
+  <header class="mdl-layout__header mdl-color--grey-100 mdl-color-text--grey-700" v-show="displayNavbar">
+    <div class="mdl-layout__header-row">
+      <div class="mdl-navigation-text">Visitor-Track | {{ currentView }}</div>
+      <div class="mdl-layout-spacer"></div>
+      <router-link id="home-link" class="mdl-navigation__link mdl-color-text--grey-600" to="home">
+        <i class="material-icons" role="presentation">home</i>
+      </router-link>
+      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="home-link">
+        Home
+      </span>
+
+      <router-link id="search-link" class="mdl-navigation__link mdl-color-text--grey-600" to="search">
+        <i class="material-icons" role="presentation">search</i>
+      </router-link>
+      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="search-link">
+        Search
+      </span>
+
+      <router-link id="users-link" class="mdl-navigation__link mdl-color-text--grey-600" to="users" v-if="displayUserLink">
+        <i class="material-icons" role="presentation">people</i>
+      </router-link>
+      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="users-link">
+        User Administration
+      </span>
+
+      <router-link id="psw-link" class="mdl-navigation__link mdl-color-text--grey-600" to="users">
+        <i class="material-icons" role="presentation">lock</i>
+      </router-link>
+      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="psw-link">
+        Change Password
+      </span>
+
+      <a href="" id="logout-link" class="mdl-navigation__link mdl-color-text--grey-600" @click="signOut">
+        <i class="material-icons" role="presentation">exit_to_app</i>
+      </a>
+      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="logout-link">
+        Sign Out
+      </span>
+      <div class="mdl-navigation-text">{{ user.displayName }}</div>
+    </div>
+  </header>
+  <main class="mdl-layout__content">
+    <router-view></router-view>
+  </main>
+</div>

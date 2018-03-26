@@ -1,53 +1,62 @@
 var gulp = require('gulp'),
   cleanCSS = require('gulp-clean-css'),
-  sass = require('gulp-sass'),
   rename = require('gulp-rename'),
-  replace = require('gulp-replace');
+  replace = require('gulp-replace'),
+  concat = require('gulp-concat'),
+  changedInPlace = require('gulp-changed-in-place');
 
-gulp.task('copy-fonts', () => {
-  var directory = './node_modules/font-awesome/fonts/';
+gulp.task('copy-font', () => {
+  const directory = 'node_modules/material-design-icons/iconfont/';
   return gulp
     .src([
-      directory + 'fontawesome-webfont.otf',
-      directory + 'fontawesome-webfont.eot',
-      directory + 'fontawesome-webfont.svg',
-      directory + 'fontawesome-webfont.ttf',
-      directory + 'fontawesome-webfont.woff',
-      directory + 'fontawesome-webfont.woff2'
+      `${directory}/MaterialIcons-Regular.eot`,
+      `${directory}/MaterialIcons-Regular.ijmap`,
+      `${directory}/MaterialIcons-Regular.svg`,
+      `${directory}/MaterialIcons-Regular.ttf`,
+      `${directory}/MaterialIcons-Regular.woff`,
+      `${directory}/MaterialIcons-Regular.woff2`
     ])
-    .pipe(gulp.dest('./dist/fonts'));
+    .pipe(changedInPlace({ firstPass: true }))
+    .pipe(gulp.dest('dist/css'));
 });
 
-gulp.task('copy-css', ['copy-fonts'], () => {
+gulp.task('copy-css', ['copy-font'], () => {
   return gulp
-    .src(['./src/styles.scss'])
-    .pipe(sass())
+    .src([
+      'node_modules/material-design-icons/iconfont/material-icons.css',
+      'node_modules/material-design-lite/dist/material.css',
+      'node_modules/dialog-polyfill/dialog-polyfill.css',
+      'node_modules/mdl-selectfield/dist/mdl-selectfield.css',
+      //'src/styles/dashboard.css',
+      'src/styles/visitor-track.css'
+    ])
+    .pipe(concat('css'))
     .pipe(cleanCSS({ compatibility: 'ie8' }))
     .pipe(rename('styles.css'))
-    .pipe(gulp.dest('./dist/css'));
+    .pipe(gulp.dest('dist/css'));
 });
 
 gulp.task('copy-systemjs', () => {
   return gulp
-    .src('./node_modules/systemjs/dist/system.js')
-    .pipe(gulp.dest('./dist'));
+    .src('node_modules/systemjs/dist/system.js')
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('copy-config-dev', () => {
   return gulp
-    .src('./build/config-dev.js')
+    .src('build/config-dev.js')
     .pipe(rename('config.js'))
-    .pipe(gulp.dest('./dist'));
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task('copy-config-prod', () => {
   const timestamp = new Date().getTime();
 
   return gulp
-    .src('./build/config-prod.js')
+    .src('build/config-prod.js')
     .pipe(replace('dist/bundle.js', 'dist/bundle.js?v=' + timestamp))
     .pipe(rename('config.js'))
-    .pipe(gulp.dest('./dist'));
+    .pipe(gulp.dest('dist'));
 });
 
 gulp.task(

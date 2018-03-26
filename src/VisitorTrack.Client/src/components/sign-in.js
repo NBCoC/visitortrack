@@ -6,8 +6,14 @@ export default {
   data() {
     return {
       email: '',
-      password: ''
+      password: '',
+      isWorking: false
     };
+  },
+  computed: {
+    isBusy() {
+      return this.isWorking;
+    }
   },
   methods: {
     signIn() {
@@ -18,10 +24,17 @@ export default {
         password: this.password
       };
 
-      authenticate(model).then(result => {
-        this.$store.dispatch('authenticate', result);
-        this.$router.push('/home');
-      });
+      this.isWorking = true;
+
+      authenticate(model)
+        .then(result => {
+          this.isWorking = false;
+          this.$store.dispatch('authenticate', result);
+          this.$router.push('/home');
+        })
+        .catch(error => {
+          this.isWorking = false;
+        });
     }
   }
 };

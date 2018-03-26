@@ -1,18 +1,16 @@
+import template from './app.html';
 import Vue from 'vue';
-import Navbar from './components/navbar';
-import ToggleNavbarBurger from './directives/toggle-navbar-burger';
+import { Mdl, ToggleMdlDrawer } from './directives/mdl';
 
-Vue.component('navbar', Navbar);
-Vue.directive('toggle-navbar-burger', ToggleNavbarBurger);
+Vue.directive('mdl', Mdl);
+Vue.directive('toggle-mdl-drawer', ToggleMdlDrawer);
 
 export default {
-  template: `
-  <div class="container">
-    <router-view></router-view>
-  </div>
-  `,
+  template,
   created() {
     const that = this;
+
+    that.$router.afterEach(to => (that.viewName = to.name));
 
     that.$router.beforeEach((to, from, next) => {
       const user = that.$store.getters.user;
@@ -28,8 +26,39 @@ export default {
       }
     });
 
-    that.$store.getters.user
-      ? that.$router.push('/home')
-      : that.$router.push('/sign-in');
+    that.viewName = that.$router.history.current.name;
+
+    if (!that.$store.getters.user) {
+      that.$router.push('/sign-in');
+    }
+  },
+  data() {
+    return {
+      viewName: 'Home'
+    };
+  },
+  computed: {
+    displayNavbar() {
+      return this.$store.getters.user !== undefined;
+    },
+    user() {
+      return this.$store.getters.user || {};
+    },
+    displayUserLink() {
+      const user = this.$store.getters.user;
+      return user && user.roleName === 'Admin';
+    },
+    currentView() {
+      return this.viewName;
+    }
+  },
+  methods: {
+    signOut() {
+      this.$store.dispatch('clear');
+      this.$router.push('/sign-in');
+    },
+    changePassword() {
+      Bus.$emit(ChangePasswordEvent);
+    }
   }
 };

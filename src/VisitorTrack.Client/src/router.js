@@ -11,29 +11,32 @@ export default new VueRouter({
   routes: [
     {
       path: '/',
-      redirect: 'home'
+      redirect: 'Home'
     },
     {
       path: '/home',
-      name: 'home',
+      name: 'Home',
       component: Home
     },
     {
       path: '/sign-in',
+      name: 'Sign In',
       component: SignIn
     },
     {
       path: '/search',
+      name: 'Search',
       component: Search
     },
     {
       path: '/users',
       component: Users,
+      name: 'User Administration',
       meta: { adminView: true }
     },
     {
       path: '*',
-      redirect: 'home'
+      redirect: 'Home'
     }
   ]
 });

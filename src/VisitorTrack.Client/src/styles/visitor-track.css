@@ -1,0 +1,206 @@
+/* animations */
+@-webkit-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-ms-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+body, html {
+  font-family: 'Roboto', 'Helvetica', sans-serif;
+}
+section {
+  -webkit-animation: fadeIn 1s;
+  animation: fadeIn 1s;
+  padding: 10px;
+}
+/* Helper classes */
+.full-width {
+  width: 100%;
+}
+dialog {
+  position: fixed;
+  top: 80px;
+  width: 340px !important;
+}
+div.mdl-layout__drawer header {
+  padding-top: 50px;
+}
+#prompt-delete-dialog .mdl-dialog__content p span {
+  font-weight: bolder;
+  padding: 0 5px;
+}
+#app-title {
+  text-align: center;
+  font-size: xx-large;
+  font-weight: bold;
+  width: 100%;
+}
+.mdl-navigation-text {
+  font-weight: bold;
+  padding-top: 3px;
+}
+.max-width-1080 {
+  max-width: 1080px;
+}
+#sign-in-btn {
+  width: 100%;
+  padding: 0;
+}
+.check-list-items {
+  margin-bottom: 5px;
+}
+.check-list-items span.check-list-item-date {
+  font-style: italic;
+  font-size: small;
+}
+.check-list-item-note {
+  padding-left: 25px;
+}
+.check-list-item-note p {
+  font-style: italic;
+}
+.children-info {
+  margin-right: 5px;
+}
+#children-info-dialog label[mt-mdl='checkbox'] {
+  margin-bottom: 5px;
+}
+.page-redirect-text,
+.loading-text {
+  font-size: 30px;
+  line-height: 72px;
+  text-shadow: rgba(0, 0, 0, 0.5) 0 0 15px;
+  text-transform: uppercase;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+.loading-text {
+  font-size: 20px;
+  text-align: center;
+}
+.person-dates {
+  font-style: italic;
+}
+dialog form {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+}
+.recent-items,
+.recent-members,
+.recent-visitors {
+  font-size: 14px !important;
+}
+.recent-members {
+  color: rgba(9, 98, 241, 0.9) !important;
+}
+.recent-visitors {
+  color: rgba(203, 203, 108, 0.9) !important;
+}
+.recent-item-link {
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.54);
+  font-weight: bold;
+}
+.recent-item-date {
+  font-style: italic;
+  font-size: smaller;
+}
+/* MDL overrides */
+.mdl-layout__header-row {
+  padding: 0 16px;
+}
+td.align {
+  vertical-align: middle !important;
+}
+.mdl-data-table th {
+  text-align: left;
+}
+.mdl-data-table td {
+  text-align: left;
+}
+.mdl-card__title-text {
+  font-size: 16px;
+}
+.mdl-card__supporting-text {
+  width: initial;
+  color: inherit;
+}
+.mdl-dialog__content {
+  color: inherit;
+}
+.float-btn,
+.add-btn {
+  position: fixed;
+  display: block;
+  right: 0;
+  bottom: 0;
+  z-index: 900;
+}
+.add-btn {
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+[loading-indicator] {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  left: 70px;
+  bottom: 50px;
+  z-index: 999;
+}
+.pull-right,
+.person-dates {
+  float: right !important;
+}
+.login-image {
+  color: black !important;
+  background-image: url('nbcc.png');
+  background-position: center !important;
+}
+.mdl-textfield__info {
+  color: gray;
+  position: absolute;
+  font-size: 12px;
+  margin-top: 3px;
+  display: block;
+}
+label[type='checkbox'] {
+  display: block;
+  padding-left: 15px;
+  text-indent: -15px;
+}
+input[type='checkbox'] {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+  *overflow: hidden;
+}

@@ -31,7 +31,8 @@
     opacity: 1;
   }
 }
-body, html {
+body,
+html {
   font-family: 'Roboto', 'Helvetica', sans-serif;
 }
 section {
@@ -40,37 +41,31 @@ section {
   padding: 10px;
 }
 /* Helper classes */
+[v-cloak] {
+  display: none;
+}
 .full-width {
   width: 100%;
+}
+.max-width {
+  max-width: 1080px;
+}
+.scrollable {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+dialog form {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
 }
 dialog {
   position: fixed;
   top: 80px;
   width: 340px !important;
 }
-div.mdl-layout__drawer header {
-  padding-top: 50px;
-}
 #prompt-delete-dialog .mdl-dialog__content p span {
   font-weight: bolder;
   padding: 0 5px;
-}
-#app-title {
-  text-align: center;
-  font-size: xx-large;
-  font-weight: bold;
-  width: 100%;
-}
-.mdl-navigation-text {
-  font-weight: bold;
-  padding-top: 3px;
-}
-.max-width-1080 {
-  max-width: 1080px;
-}
-#sign-in-btn {
-  width: 100%;
-  padding: 0;
 }
 .check-list-items {
   margin-bottom: 5px;
@@ -106,10 +101,7 @@ div.mdl-layout__drawer header {
 .person-dates {
   font-style: italic;
 }
-dialog form {
-  max-height: calc(100vh - 150px);
-  overflow-y: auto;
-}
+
 .recent-items,
 .recent-members,
 .recent-visitors {
@@ -179,7 +171,7 @@ td.align {
 }
 .login-image {
   color: black !important;
-  background-image: url('nbcc.png');
+  /*background-image: url('nbcc.png');*/
   background-position: center !important;
 }
 .mdl-textfield__info {
@@ -203,4 +195,12 @@ input[type='checkbox'] {
   position: relative;
   top: -1px;
   *overflow: hidden;
+}
+@media (max-width: 480px) {
+  .mdl-navigation-text {
+    display: none;
+  }
+  .mdl-layout__header-row .mdl-navigation__link {
+    padding: 0 5px;
+  }
 }

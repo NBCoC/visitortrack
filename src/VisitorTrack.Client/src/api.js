@@ -12,6 +12,11 @@ export const getUserRoles = token =>
     .get('GetUserRolesHttpTrigger')
     .then(result => result.data);
 
+export const getUsers = token =>
+  getInstance(token)
+    .get('GetAllUsersHttpTrigger')
+    .then(result => result.data);
+
 export const authenticate = model =>
   getInstance()
     .post('AuthenticateUserHttpTrigger', model)

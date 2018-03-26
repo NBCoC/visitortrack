@@ -82,17 +82,6 @@ const MdlControls = {
   }
 };
 
-const toggleDrawer = event => {
-  event.stopPropagation();
-
-  const layout = document.querySelector('.mdl-layout');
-  const isSmallScreen = layout.classList.contains('is-small-screen');
-
-  if (!isSmallScreen) return;
-
-  layout.MaterialLayout.toggleDrawer();
-};
-
 export const Mdl = {
   inserted: (el, binding) => {
     if (!componentHandler)
@@ -121,9 +110,4 @@ export const Mdl = {
       componentHandler.upgradeElement(item, 'MaterialRipple');
     }
   }
-};
-
-export const ToggleMdlDrawer = {
-  bind: el => el.addEventListener('click', toggleDrawer),
-  unbind: el => el.removeEventListener('click', toggleDrawer)
 };

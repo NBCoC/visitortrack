@@ -1,5 +1,8 @@
 export default {
   computed: {
+    token() {
+      return this.$store.getters.token;
+    },
     user() {
       return this.$store.getters.user || {};
     },

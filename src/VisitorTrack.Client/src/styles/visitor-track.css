@@ -1,55 +1,9 @@
-/* animations */
-@-webkit-keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-@-moz-keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-@-ms-keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
+
 body,
 html {
   font-family: 'Roboto', 'Helvetica', sans-serif;
 }
-section {
-  -webkit-animation: fadeIn 1s;
-  animation: fadeIn 1s;
-  padding: 10px;
-}
-/* Helper classes */
-[v-cloak] {
-  display: none;
-}
-.full-width {
-  width: 100%;
-}
-.max-width {
-  max-width: 1080px;
-}
+
 .scrollable {
   overflow-x: auto;
   overflow-y: hidden;

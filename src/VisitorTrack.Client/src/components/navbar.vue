@@ -1,47 +1,62 @@
 <template>
-  <header class="mdl-layout__header mdl-color--grey-100 mdl-color-text--grey-700">
-    <div class="mdl-layout__header-row">
-      <div class="mdl-navigation-text">Visitor-Track | {{ currentView }}</div>
-      <div class="mdl-layout-spacer"></div>
-
-      <router-link id="home-link" class="mdl-navigation__link mdl-color-text--grey-600" to="home">
-        <i class="material-icons" role="presentation">home</i>
+  <nav class="navbar is-light">
+    <div class="navbar-brand">
+      <router-link class="navbar-item has-text-weight-bold" to="home">
+        Visitor-Track
       </router-link>
-      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="home-link">
-        Home
-      </span>
-
-      <router-link id="search-link" class="mdl-navigation__link mdl-color-text--grey-600" to="search">
-        <i class="material-icons" role="presentation">search</i>
-      </router-link>
-      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="search-link">
-        Search
-      </span>
-
-      <router-link id="users-link" class="mdl-navigation__link mdl-color-text--grey-600" to="users" v-if="isAdminUser">
-        <i class="material-icons" role="presentation">people</i>
-      </router-link>
-      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="users-link">
-        User Administration
-      </span>
-
-      <router-link id="psw-link" class="mdl-navigation__link mdl-color-text--grey-600" to="users">
-        <i class="material-icons" role="presentation">lock</i>
-      </router-link>
-      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="psw-link">
-        Change Password
-      </span>
-
-      <a href="#/home" id="logout-link" class="mdl-navigation__link mdl-color-text--grey-600" @click.stop="signOut">
-        <i class="material-icons" role="presentation">exit_to_app</i>
-      </a>
-      <span v-mdl:tooltip class="mdl-tooltip--large" data-mdl-for="logout-link">
-        Sign Out
-      </span>
-
-      <div class="mdl-navigation-text">{{ user.displayName }}</div>
+      <div class="navbar-burger burger" data-target="main-navbar" v-toggle-navbar-burger>
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
-  </header>
+
+    <div id="main-navbar" class="navbar-menu">
+      <div class="navbar-start">
+        <div class="navbar-item">
+          <router-link to="home">
+            <i class="fa fa-home"></i> Home
+          </router-link>
+        </div>
+        <div class="navbar-item">
+          <router-link to="search">
+            <i class="fa fa-search"></i> Search
+          </router-link>
+        </div>
+        <div class="navbar-item" v-if="isAdminUser">
+          <router-link to="users">
+            <i class="fa fa-users"></i> Users
+          </router-link>
+        </div>
+      </div>
+
+      <div class="navbar-end">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <div class="navbar-link">
+            <span>
+              <i class="fa fa-user"></i> {{ user.displayName }}</span>
+          </div>
+          <div class="navbar-dropdown is-boxed">
+            <div class="navbar-item">
+              <a>
+                <span>
+                  <i class="fa fa-key"></i> Change Password
+                </span>
+              </a>
+            </div>
+            <hr class="navbar-divider">
+            <div class="navbar-item">
+              <a @click="signOut">
+                <span>
+                  <i class="fa fa-sign-out"></i> Sign Out
+                </span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
 </template>
 <script>
 import Vue from 'vue';
@@ -50,12 +65,10 @@ export default {
   created() {
     const that = this;
 
-    that.$router.afterEach(to => (that.viewName = to.name));
-
     that.$router.beforeEach((to, from, next) => {
       if (to.path === '/sign-in') {
-        that.user ? next(from.path) : next();
-      } else if (!that.user) {
+        that.token ? next(from.path) : next();
+      } else if (!that.token) {
         next('/sign-in');
       } else if (to.meta.adminView && !that.isAdminUser) {
         next(false);
@@ -64,20 +77,8 @@ export default {
       }
     });
 
-    that.viewName = that.$router.history.current.name;
-
-    if (!that.user) {
+    if (!that.token) {
       that.$router.push('/sign-in');
-    }
-  },
-  data() {
-    return {
-      viewName: 'Home'
-    };
-  },
-  computed: {
-    currentView() {
-      return this.viewName;
     }
   },
   methods: {
@@ -91,9 +92,4 @@ export default {
   }
 };
 </script>
-<style scoped>
-.mdl-navigation-text {
-  font-weight: bold;
-  padding-top: 3px;
-}
-</style>
+<style scoped></style>

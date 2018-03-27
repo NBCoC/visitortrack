@@ -17,6 +17,11 @@ export const getUsers = token =>
     .get('GetAllUsersHttpTrigger')
     .then(result => result.data);
 
+export const getUser = (token, id) =>
+  getInstance(token)
+    .get(`GetUserHttpTrigger?id=${id}`)
+    .then(result => result.data);
+
 export const authenticate = model =>
   getInstance()
     .post('AuthenticateUserHttpTrigger', model)

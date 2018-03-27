@@ -1,0 +1,54 @@
+@-webkit-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-moz-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@-ms-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+section {
+  -webkit-animation: fadeIn 1s;
+  animation: fadeIn 1s;
+  padding: 10px;
+}
+[v-cloak] {
+  display: none;
+}
+.full-width {
+  width: 100%;
+}
+a {
+  color: black;
+}
+.table th {
+  text-align: left;
+  vertical-align: middle !important;
+}
+.table td {
+  text-align: left;
+  vertical-align: middle !important;
+}

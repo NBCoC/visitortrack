@@ -1,19 +1,19 @@
 <template>
-  <div v-mdl:layout class="mdl-layout--fixed-header">
-    <navbar v-show="isAuthenticated"></navbar>
-    <main class="mdl-layout__content">
-      <router-view></router-view>
-    </main>
-  </div>
+    <div>
+      <navbar v-show="isAuthenticated" />
+      <div class="container">
+        <router-view />
+      </div>
+    </div>
 </template>
 <script>
 import Vue from 'vue';
 import CurrentUser from './mixins/current-user';
-import { Mdl, ToggleMdlDrawer } from './directives/mdl';
+import ToggleNavbarBurger from './directives/toggle-navbar-burger';
 import Navbar from './components/navbar.vue';
 
 Vue.mixin(CurrentUser);
-Vue.directive('mdl', Mdl);
+Vue.directive('toggle-navbar-burger', ToggleNavbarBurger);
 Vue.component('navbar', Navbar);
 
 export default {};

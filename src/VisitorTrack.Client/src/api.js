@@ -19,7 +19,7 @@ export const getUsers = token =>
 
 export const getUser = (token, id) =>
   getInstance(token)
-    .get(`GetUserHttpTrigger?id=${id}`)
+    .get(`GetUserHttpTrigger?entityId=${id}`)
     .then(result => result.data);
 
 export const authenticate = model =>
@@ -29,5 +29,5 @@ export const authenticate = model =>
 
 export const changePassword = (id, model) =>
   getInstance(token)
-    .post(`ChangePasswordHttpTrigger?contextUserId=${id}`, model)
+    .post(`UpdateUserPasswordHttpTrigger?contextUserId=${id}`, model)
     .then(result => result.data);

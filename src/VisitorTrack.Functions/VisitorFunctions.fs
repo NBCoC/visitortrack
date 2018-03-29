@@ -14,7 +14,7 @@ module GetStatusList =
 
     [<FunctionName("GetStatusListHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing GetStatusList func...")
+        log.Info(sprintf "Executing get status list func...")
 
         let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
@@ -27,7 +27,7 @@ module GetAgeGroups =
 
     [<FunctionName("GetAgeGroupsHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing GetAgeGroups func...")
+        log.Info(sprintf "Executing get age groups func...")
 
         let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
@@ -40,16 +40,15 @@ module GetVisitor =
 
     [<FunctionName("GetVisitorHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing GetVisitor func...")
+        log.Info(sprintf "Executing get visitor func...")
 
         let opts = Settings.getStorageOptions ()
         let ok dto = req.CreateResponse(HttpStatusCode.OK, dto)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
         let createRequest () =
-            req.TryGetQueryStringValue "id" 
-            |> Result.ofOption "Visitor ID is required"
-            |> Result.bind EntityId.create
+            Utility.getEntityId req
+            |> EntityId.create
             |> Result.bind (VisitorManager.find opts)
 
         Utility.validateToken req
@@ -60,7 +59,7 @@ module DeleteVisitor =
 
     [<FunctionName("DeleteVisitorHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "delete")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing DeleteVisitor func...")
+        log.Info(sprintf "Executing delete visitor func...")
 
         let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
@@ -83,7 +82,7 @@ module SearchVisitors =
 
     [<FunctionName("SearchVisitorsHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing SearchVisitors func...")
+        log.Info(sprintf "Executing search visitors func...")
 
         let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)

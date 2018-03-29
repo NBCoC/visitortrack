@@ -17,7 +17,7 @@ namespace VisitorTrack.Entities
                 AgeGroupEnum.Group60plus
             };
 
-            return 
+            return
                 ageGroups
                     .Select(ageGroup => new Lookup() { Id = Convert.ToInt32(ageGroup), Name = GetAgeGroupName(ageGroup) })
                     .ToArray();
@@ -25,46 +25,56 @@ namespace VisitorTrack.Entities
 
         public static Lookup[] StatusLookup()
         {
-            return new Lookup[]
+            var statusList = new VisitorStatusEnum[]
             {
-                new Lookup() { Id = Convert.ToInt32(VisitorStatusEnum.Active), Name = "Active" },
-                new Lookup() { Id = Convert.ToInt32(VisitorStatusEnum.Inactive), Name = "Inactive" },
-                new Lookup() { Id = Convert.ToInt32(VisitorStatusEnum.Member), Name = "Member" }
+                VisitorStatusEnum.Active,
+                VisitorStatusEnum.Inactive,
+                VisitorStatusEnum.Member
             };
+
+            return 
+                statusList
+                    .Select(status => new Lookup() { Id = Convert.ToInt32(status), Name = status.ToString() })
+                    .ToArray();
         }
 
         public static Lookup[] RoleLookup()
         {
-            return new Lookup[]
+            var roles = new UserRoleEnum[]
             {
-                new Lookup() { Id = Convert.ToInt32(UserRoleEnum.Admin), Name = "Admin" },
-                new Lookup() { Id = Convert.ToInt32(UserRoleEnum.Editor), Name = "Editor" },
-                new Lookup() { Id = Convert.ToInt32(UserRoleEnum.Viewer), Name = "Viewer" }
+                UserRoleEnum.Admin,
+                UserRoleEnum.Editor,
+                UserRoleEnum.Viewer
             };
+
+            return 
+                roles
+                    .Select(role => new Lookup() { Id = Convert.ToInt32(role), Name = role.ToString() })
+                    .ToArray();
         }
 
         public static string GetAgeGroupName(AgeGroupEnum ageGroup)
         {
             switch (ageGroup)
-                {
-                    case AgeGroupEnum.Group18to29:
-                        return "18 - 19";
+            {
+                case AgeGroupEnum.Group18to29:
+                    return "18 - 19";
 
-                    case AgeGroupEnum.Group29to39:
-                        return "29 - 39";
+                case AgeGroupEnum.Group29to39:
+                    return "29 - 39";
 
-                    case AgeGroupEnum.Group40to50:
-                        return "40 - 50";
+                case AgeGroupEnum.Group40to50:
+                    return "40 - 50";
 
-                    case AgeGroupEnum.Group50to59:
-                        return "50 - 59";
+                case AgeGroupEnum.Group50to59:
+                    return "50 - 59";
 
-                    case AgeGroupEnum.Group60plus:
-                        return "60+";
+                case AgeGroupEnum.Group60plus:
+                    return "60+";
 
-                    default:
-                        return "Unknown";
-                }
+                default:
+                    return "Unknown";
+            }
         }
     }
 }

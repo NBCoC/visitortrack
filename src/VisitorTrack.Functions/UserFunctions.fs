@@ -15,7 +15,7 @@ module GetUserRoles =
 
     [<FunctionName("GetUserRolesHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing GetUserRoles func...")
+        log.Info(sprintf "Executing get user roles func...")
 
         let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
@@ -29,7 +29,7 @@ module UpdateUser =
     [<FunctionName("UpdateUserHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "put")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
-            log.Info(sprintf "Executing UpdateUser func...")
+            log.Info(sprintf "Executing update user func...")
 
             let! payload = req.TryGetDto<User>()
             
@@ -60,7 +60,7 @@ module CreateUser =
     [<FunctionName("CreateUserHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
-            log.Info(sprintf "Executing CreateUser func...")
+            log.Info(sprintf "Executing create user func...")
 
             let! payload = req.TryGetDto<User>()
 
@@ -91,7 +91,7 @@ module DeleteUser =
 
     [<FunctionName("DeleteUserHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "delete")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing DeleteUser func...")
+        log.Info(sprintf "Executing delete user func...")
 
         let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
@@ -114,16 +114,15 @@ module GetUser =
 
     [<FunctionName("GetUserHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing GetUser func...")
+        log.Info(sprintf "Executing get user func...")
 
         let opts = Settings.getStorageOptions ()
         let ok dto = req.CreateResponse(HttpStatusCode.OK, dto)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
         let createRequest () =
-            req.TryGetQueryStringValue "id" 
-            |> Result.ofOption "User ID is required"
-            |> Result.bind EntityId.create
+            Utility.getEntityId req
+            |> EntityId.create
             |> Result.bind (UserManager.find opts)
 
         Utility.validateToken req
@@ -134,7 +133,7 @@ module GetAllUsers =
 
     [<FunctionName("GetAllUsersHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing GetAllUsers func...")
+        log.Info(sprintf "Executing Get all users func...")
 
         let opts = Settings.getStorageOptions ()
         let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
@@ -153,7 +152,7 @@ module AuthenticateUser =
     [<FunctionName("AuthenticateUserHttpTrigger")>]
     let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
-            log.Info(sprintf "Executing AuthenticateUser func...")
+            log.Info(sprintf "Executing authenticate user func...")
 
             let! payload = req.TryGetDto<AuthenticateUser>()
 
@@ -175,6 +174,64 @@ module AuthenticateUser =
                 Result.ofOption "DTO payload is required" payload
                 |> Result.map toRequest
                 |> Result.bind UserManager.authenticate
+                |> Result.either ok error
+
+        } |> Async.RunSynchronously
+
+module UpdateUserPassword =
+
+    [<FunctionName("UpdateUserPasswordHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
+        async {
+            log.Info(sprintf "Executing update user password func...")
+
+            let! payload = req.TryGetDto<UpdateUserPassword>()
+
+            let toRequest (model: UpdateUserPassword) : UpdatePasswordRequest = {
+                ContextUserId = Utility.getContextUserId req
+                Options = Settings.getStorageOptions ()
+                Model = model
+            }
+
+            let createRequest () =
+                Result.ofOption "DTO payload is required" payload
+                |> Result.map toRequest
+                |> Result.bind UserManager.updatePassword
+
+            let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+            return
+                Utility.validateToken req
+                |> Result.bind createRequest
+                |> Result.either ok error
+
+        } |> Async.RunSynchronously
+
+module ResetUserPassword =
+
+    [<FunctionName("ResetUserPasswordHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
+        async {
+            log.Info(sprintf "Executing reset user password func...")
+
+            let toRequest () : ResetPasswordRequest = {
+                ContextUserId = Utility.getContextUserId req
+                UserId = Utility.getEntityId req
+                Options = Settings.getStorageOptions ()
+                Password = Settings.getDefaultPassword()
+            }
+
+            let createRequest () =
+                toRequest ()
+                |> UserManager.resetPassword
+
+            let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+            return
+                Utility.validateToken req
+                |> Result.bind createRequest
                 |> Result.either ok error
 
         } |> Async.RunSynchronously

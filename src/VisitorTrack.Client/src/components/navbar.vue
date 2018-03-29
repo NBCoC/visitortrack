@@ -24,7 +24,7 @@
           </router-link>
         </div>
         <div class="navbar-item" v-if="isAdminUser">
-          <router-link to="users">
+          <router-link to="admin/users">
             <i class="fa fa-users"></i> Users
           </router-link>
         </div>
@@ -38,11 +38,11 @@
           </div>
           <div class="navbar-dropdown is-boxed">
             <div class="navbar-item">
-              <a>
+              <router-link to="user/change-password">
                 <span>
                   <i class="fa fa-key"></i> Change Password
                 </span>
-              </a>
+              </router-link>
             </div>
             <hr class="navbar-divider">
             <div class="navbar-item">
@@ -85,9 +85,6 @@ export default {
     signOut() {
       this.$store.dispatch('clear');
       this.$router.push('/sign-in');
-    },
-    changePassword() {
-      Bus.$emit(ChangePasswordEvent);
     }
   }
 };

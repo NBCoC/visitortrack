@@ -7,9 +7,9 @@
           <th>Email</th>
           <th>Role</th>
           <th class="action-items">
-            <button class="button is-success is-small">
+            <router-link class="button is-success is-small" :to="{ name: 'User' }">
               <i class="fa fa-plus"></i>
-            </button>
+            </router-link>
           </th>
         </tr>
       </thead>

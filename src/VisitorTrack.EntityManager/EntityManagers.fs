@@ -55,7 +55,7 @@ module EntityManager =
             let createCollection (client: DocumentClient) databaseId =
                 let uri = getDatabaseUri databaseId
                 let collection = DocumentCollection(Id = CollectionId.Value collectionId)
-                let options = RequestOptions (OfferThroughput = Nullable<int>(2500) )
+                let options = RequestOptions (OfferThroughput = Nullable<int>(2500))
 
                 client.CreateDocumentCollectionIfNotExistsAsync(uri, collection, options) 
                 |> Result.fromTask ok
@@ -114,7 +114,9 @@ module EntityManager =
                 let uri = getDocumentUri databaseId collectionId entityId
                 let ok _ = ()
 
-                return! client.DeleteDocumentAsync(uri) |> Result.fromTask ok
+                return! 
+                    client.DeleteDocumentAsync(uri) 
+                    |> Result.fromTask ok
             }
 
         executeTask request.Options collectionId task
@@ -126,7 +128,9 @@ module EntityManager =
                 let uri = getDocumentUri databaseId collectionId entityId
                 let ok (response: DocumentResponse<'T>) = response.Document
 
-                return! client.ReadDocumentAsync<'T>(uri) |> Result.fromTask ok
+                return! 
+                    client.ReadDocumentAsync<'T>(uri) 
+                    |> Result.fromTask ok
             }
 
         executeTask opts collectionId task
@@ -136,7 +140,9 @@ module EntityManager =
             let uri = getDocumentUri databaseId collectionId entityId
             let ok _ = ()
 
-            return! client.ReplaceDocumentAsync(uri, entity) |> Result.fromTask ok
+            return! 
+                client.ReplaceDocumentAsync(uri, entity) 
+                |> Result.fromTask ok
         }
 
     let internal hasPropertyValue (client: DocumentClient) databaseId collectionId (propertyName : string) propertyValue = 

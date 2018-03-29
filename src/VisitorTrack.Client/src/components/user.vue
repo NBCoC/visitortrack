@@ -1,43 +1,55 @@
 <template>
   <section>
-    <div class="mdl-grid">
-      <div class="mdl-cell mdl-layout-spacer mdl-cell--4-col mdl-cell--2-col-tablet"></div>
-      <div class="mdl-cell mdl-cell--4-col mdl-cell--4-col-tablet">
-        <div class="mdl-card mdl-shadow--2dp full-width">
-          <form>
-              <div class="mdl-card__title mdl-card--expand">
-                <h2 class="mdl-card__title-text">User</h2>
-              </div>
-              <div class="mdl-card__supporting-text mdl-color-text--grey-600">
-                <div v-mdl:textfield class="mdl-textfield--floating-label full-width">
-                  <input class="mdl-textfield__input" type="email" id="emailControl" name="emailControl" 
-                         v-model="model.emailAddress" required>
-                  <label class="mdl-textfield__label" for="emailControl">Email...</label>
-                </div>
+    <div class="columns is-mobile">
+      <div class="column"></div>
+      <div class="column is-three-quarters-mobile">
+        <div class="card">
+            <form @submit.prevent="save">
+              <header class="card-header">
+                <p class="card-header-title">
+                  {{ title }}
+                </p>
+              </header>
+              <div class="card-content">
+                <div class="content">
+                  <div class="field">
+                    <label class="label">Email</label>
+                    <div class="control">
+                      <input class="input" type="email" placeholder="Email..." v-model="model.emailAddress" :readonly="isReadonly">
+                    </div>
+                  </div>
 
-                <div v-mdl:textfield class="mdl-textfield--floating-label full-width">
-                  <input class="mdl-textfield__input" type="text" id="displayNameControl" name="displayNameControl" 
-                         v-model="model.displayName" required>
-                  <label class="mdl-textfield__label" for="displayNameControl">Display Name...</label>
-                </div>
+                  <div class="field">
+                    <label class="label">Display Name</label>
+                    <div class="control">
+                      <input class="input" type="text" placeholder="Display Name..." v-model="model.displayName">
+                    </div>
+                  </div>
 
-                <div v-mdl:selectfield class="mdl-selectfield--floating-label full-width">
-                    <select id="roleControl" name="roleControl" class="mdl-selectfield__select" 
-                            v-model="model.roleId">
-                      <option v-for="role in roles" :key="role.id" v-bind:value="role.id">{{ role.name }}</option>
-                    </select>
-                  <label class="mdl-selectfield__label" for="roleControl">Role...</label>
+                  <div class="field">
+                    <label class="label">Role</label>
+                    <div class="control">
+                      <div class="select full-width">
+                        <select v-model="model.roleId" class="full-width">
+                          <option v-for="role in roles" :key="role.id" :value="role.id">{{ role.name }}</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="field">
+                    <button class="button is-primary full-width" type="submit">
+                      <span>
+                        <i class="fa fa-save"></i> Save
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
-              <div class="mdl-card__actions mdl-card--border">
-                <input v-mdl:button type="submit" 
-                       class="mdl-button--colored mdl-js-ripple-effect full-width" 
-                       value="Save" />
-              </div>
-          </form>
-        </div>
+            </form>
+          </div>
       </div>
-      <div class="mdl-cell mdl-layout-spacer mdl-cell--4-col mdl-cell--2-col-tablet"></div>
+      <div class="column"></div>
     </div>
   </section>
 </template>
@@ -55,6 +67,14 @@ export default {
     };
   },
   props: ['id'],
+  computed: {
+    title() {
+      return this.model.id ? 'Edit User' : 'New User';
+    },
+    isReadonly() {
+      return this.model.id !== undefined;
+    }
+  },
   methods: {
     getModel() {
       const that = this;
@@ -62,7 +82,6 @@ export default {
       if (id) {
         getUser(that.token, id).then(data => {
           that.model = data;
-          setTimeout(() => that.refreshMdl(that.$el));
         });
       }
     },
@@ -71,6 +90,14 @@ export default {
       getUserRoles(that.token).then(data => {
         that.roles = data;
       });
+    },
+    save() {
+      if (
+        !this.model.emailAddress ||
+        !this.model.displayName ||
+        !this.model.roleId
+      )
+        return;
     }
   }
 };

@@ -5,6 +5,7 @@ import SignIn from './components/sign-in.vue';
 import Search from './components/search.vue';
 import UserList from './components/user-list.vue';
 import User from './components/user.vue';
+import ChangePassword from './components/change-password.vue';
 
 Vue.use(VueRouter);
 
@@ -30,13 +31,18 @@ export default new VueRouter({
       component: Search
     },
     {
-      path: '/users',
+      path: '/user/change-password',
+      name: 'Change Password',
+      component: ChangePassword
+    },
+    {
+      path: '/admin/users',
       component: UserList,
       name: 'User Administration',
       meta: { adminView: true }
     },
     {
-      path: '/user/:id([0-9a-f]{8}-?[0-9a-f]{4}-?[1-5][0-9a-f]{3}-?[89ab][0-9a-f]{3}-?[0-9a-f]{12})',
+      path: '/admin/user/:id([0-9a-f]{8}-?[0-9a-f]{4}-?[1-5][0-9a-f]{3}-?[89ab][0-9a-f]{3}-?[0-9a-f]{12})',
       component: User,
       name: 'User',
       meta: { adminView: true },

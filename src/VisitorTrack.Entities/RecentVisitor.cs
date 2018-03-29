@@ -11,5 +11,7 @@ namespace VisitorTrack.Entities
         public string FullName { get; set; }
 
         public VisitorStatusEnum StatusId { get; set; }
+
+        public string StatusName => StatusId.ToString();
     }
 }

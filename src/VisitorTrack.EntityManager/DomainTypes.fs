@@ -18,7 +18,7 @@ module CustomTypes =
 
     type DefaultPassword = DefaultPassword of string
 
-    type HashedPassword = HashedPassword of string
+    type HashedPassword = internal HashedPassword of string
 
     type EntityId = private EntityId of string
 

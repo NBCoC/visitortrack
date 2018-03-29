@@ -30,7 +30,7 @@
     opacity: 1;
   }
 }
-section {
+div.page {
   -webkit-animation: fadeIn 1s;
   animation: fadeIn 1s;
   padding: 10px;

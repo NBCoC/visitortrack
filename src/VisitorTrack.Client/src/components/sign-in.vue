@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <div class="page">
     <div sign-in-page class="columns is-mobile">
       <div class="column"></div>
       <div class="column is-three-quarters-mobile">
@@ -31,7 +31,7 @@
                 </div>
 
                 <div class="field">
-                  <button class="button is-primary full-width" type="submit">
+                  <button type="submit" class="button is-primary full-width" :class="{ 'is-loading' : isBusy }">
                     <span>
                       <i class="fa fa-sign-in"></i> Sign In
                     </span>
@@ -44,23 +44,18 @@
       </div>
       <div class="column"></div>
     </div>
-  </section>
+  </div>
 </template>
 <script>
 import { authenticate } from '../api';
+import { apiError } from '../bus';
 
 export default {
   data() {
     return {
       email: '',
-      password: '',
-      isWorking: false
+      password: ''
     };
-  },
-  computed: {
-    isBusy() {
-      return this.isWorking;
-    }
   },
   methods: {
     signIn() {
@@ -83,6 +78,7 @@ export default {
         })
         .catch(error => {
           that.isWorking = false;
+          apiError(error);
         });
     }
   }

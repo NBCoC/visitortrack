@@ -1,7 +1,7 @@
 <template>
-  <section>
+  <div class="page">
     {{ message }}
-  </section>
+  </div>
 </template>
 <script>
   export default {

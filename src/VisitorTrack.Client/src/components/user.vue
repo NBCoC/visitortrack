@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <div class="page">
     <div class="columns is-mobile">
       <div class="column"></div>
       <div class="column is-three-quarters-mobile">
@@ -38,9 +38,17 @@
                   </div>
 
                   <div class="field">
-                    <button class="button is-primary full-width" type="submit">
+                    <button type="submit" class="button is-primary full-width" :class="{ 'is-loading' : isBusy }">
                       <span>
                         <i class="fa fa-save"></i> Save
+                      </span>
+                    </button>
+                  </div>
+
+                  <div class="field">
+                    <button type="button" class="button is-danger full-width" :class="{ 'is-loading' : isBusy }" @click="remove" v-show="isReadonly">
+                      <span>
+                        <i class="fa fa-trash"></i> Delete
                       </span>
                     </button>
                   </div>
@@ -51,10 +59,19 @@
       </div>
       <div class="column"></div>
     </div>
-  </section>
+  </div>
 </template>
 <script>
-import { getUser, getUserRoles } from '../api';
+import {
+  getUser,
+  getUserRoles,
+  createUser,
+  updateUser,
+  deleteUser
+} from '../api';
+
+import { confirm, apiError } from '../bus';
+
 export default {
   created() {
     this.getRoles();
@@ -80,30 +97,74 @@ export default {
       const that = this;
       const id = that.$route.params.id;
       if (id) {
-        getUser(that.token, id).then(data => {
-          that.model = data;
-        });
+        getUser(that.token, id)
+          .then(data => {
+            that.model = data;
+          })
+          .catch(apiError);
       }
     },
     getRoles() {
       const that = this;
-      getUserRoles(that.token).then(data => {
-        that.roles = data;
-      });
+      getUserRoles(that.token)
+        .then(data => {
+          that.roles = data;
+        })
+        .catch(apiError);
     },
     save() {
-      if (
-        !this.model.emailAddress ||
-        !this.model.displayName ||
-        !this.model.roleId
-      )
-        return;
+      const that = this;
+
+      if (!that.model.emailAddress || !that.model.displayName) return;
+
+      const model = {
+        emailAddress: that.model.emailAddress,
+        displayName: that.model.displayName,
+        roleId: that.model.roleId
+      };
+
+      that.isWorking = true;
+
+      const upsert = that.model.id
+        ? updateUser(that.token, that.user.id, that.model.id, model)
+        : createUser(that.token, that.user.id, model);
+
+      upsert
+        .then(() => {
+          that.isWorking = false;
+          that.$router.push('/admin/users');
+        })
+        .catch(error => {
+          that.isWorking = false;
+          apiError(error);
+        });
+    },
+    remove() {
+      const that = this;
+      if (!that.isReadonly) return;
+
+      const callback = () => {
+        that.isWorking = true;
+        deleteUser(that.token, that.user.id, that.model.id)
+          .then(() => {
+            that.isWorking = false;
+            that.$router.push('/admin/users');
+          })
+          .catch(error => {
+            that.isWorking = false;
+            apiError(error);
+          });
+      };
+
+      confirm(
+        `Delete ${that.model.displayName}`,
+        'Are you sure you want to delete this user?',
+        callback
+      );
     }
   }
 };
 </script>
-<style scoped>
-
-</style>
+<style scoped></style>
 
 

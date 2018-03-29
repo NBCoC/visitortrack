@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <div class="page">
     <table class="table is-bordered is-striped is-hoverable is-fullwidth" v-show="dataSource.length">
       <thead>
         <tr>
@@ -23,21 +23,18 @@
               <i class="fa fa-edit"></i>
             </router-link>
 
-            <button class="button is-danger is-small">
-              <i class="fa fa-trash"></i>
-            </button>
-
-            <button class="button is-warning is-small" to="home" v-show="isAdminUser">
+            <button class="button is-warning is-small" v-show="isAdminUser" @click="resetPassword(item)">
               Reset Password
             </button>
           </td>
         </tr>
       </tbody>
     </table>
-  </section>
+  </div>
 </template>
 <script>
-import { getUsers } from '../api';
+import { getUsers, resetPassword } from '../api';
+import { apiError, alert, confirm } from '../bus';
 
 export default {
   created() {
@@ -51,15 +48,38 @@ export default {
   methods: {
     load() {
       const that = this;
-      getUsers(that.token).then(data => {
-        that.dataSource = data;
-      });
+      getUsers(that.token)
+        .then(data => {
+          that.dataSource = data;
+        })
+        .catch(apiError);
+    },
+    resetPassword(model) {
+      if (!model) return;
+
+      const that = this;
+      const callback = () => {
+        resetPassword(that.token, that.user.id, model.id)
+          .then(() =>
+            alert(
+              'Visitor-Track',
+              `${model.displayName}'s password has been reset!`
+            )
+          )
+          .catch(error => apiError);
+      };
+
+      confirm(
+        `Reset ${model.displayName}'s password`,
+        "Are you sure you want to reset this user's password?",
+        callback
+      );
     }
   }
 };
 </script>
 <style scoped>
 th.action-items {
-  width: 200px;
+  width: 165px;
 }
 </style>

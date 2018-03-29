@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <div class="page">
     <div class="columns is-mobile">
       <div class="column"></div>
       <div class="column is-three-quarters-mobile">
@@ -15,26 +15,26 @@
                   <div class="field">
                     <label class="label">Current Password</label>
                     <div class="control">
-                      <input class="input" type="password" placeholder="Current Password..." v-model="model.oldPassword">
+                      <input class="input" type="password" placeholder="Current Password..." v-model="oldPassword">
                     </div>
                   </div>
 
                   <div class="field">
                     <label class="label">New Password</label>
                     <div class="control">
-                      <input class="input" type="password" placeholder="New Password..." v-model="model.newPassword">
+                      <input class="input" type="password" placeholder="New Password..." v-model="newPassword">
                     </div>
                   </div>
 
                   <div class="field">
                     <label class="label">Confirm Password</label>
                     <div class="control">
-                      <input class="input" type="password" placeholder="Confirm Password..." v-model="model.confirmPassword">
+                      <input class="input" type="password" placeholder="Confirm Password..." v-model="confirmPassword">
                     </div>
                   </div>
 
                   <div class="field">
-                    <button class="button is-primary full-width" type="submit">
+                    <button class="button is-primary full-width" type="submit" :class="{ 'is-loading' : isBusy }">
                       <span>
                         <i class="fa fa-save"></i> Save
                       </span>
@@ -47,21 +47,53 @@
       </div>
       <div class="column"></div>
     </div>
-  </section>
+  </div>
 </template>
 <script>
+import { updatePassword } from '../api';
+import { alert, apiError } from '../bus';
+
 export default {
   data() {
     return {
-      model: {
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      }
+      oldPassword: '',
+      newPassword: '',
+      confirmPassword: ''
     };
   },
   methods: {
-    save() {}
+    save() {
+      const that = this;
+
+      if (!that.oldPassword || !that.newPassword || !that.confirmPassword)
+        return;
+
+      if (that.oldPassword === that.newPassword) {
+        alert('Change Password', 'New password cannot be the same as current.');
+        return;
+      }
+
+      if (that.newPassword !== that.confirmPassword) {
+        alert('Change Password', 'Confirm password must match new password.');
+        return;
+      }
+
+      const model = {
+        oldPassword: that.oldPassword,
+        newPassword: that.newPassword
+      };
+
+      that.isWorking = true;
+      updatePassword(that.token, that.user.id, model)
+        .then(() => {
+          that.isWorking = false;
+          alert('Change Password', 'Your password has been changed!');
+        })
+        .catch(error => {
+          that.isWorking = false;
+          apiError(error);
+        });
+    }
   }
 };
 </script>

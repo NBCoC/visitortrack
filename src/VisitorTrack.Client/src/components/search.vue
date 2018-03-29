@@ -1,5 +1,5 @@
 <template>
-  <section>
+  <div class="page">
  
       <input class="input" type="text" placeholder="Search members / visitors...">
   
@@ -26,7 +26,7 @@
         </tbody>
       </table>
      
-  </section>
+  </div>
 </template>
 <script>
 export default {

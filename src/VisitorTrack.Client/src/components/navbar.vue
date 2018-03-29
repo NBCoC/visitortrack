@@ -1,7 +1,7 @@
 <template>
   <nav class="navbar is-light">
     <div class="navbar-brand">
-      <router-link class="navbar-item has-text-weight-bold" to="home">
+      <router-link class="navbar-item has-text-weight-bold" to="/home">
         Visitor-Track
       </router-link>
       <div class="navbar-burger burger" data-target="main-navbar" v-toggle-navbar-burger>
@@ -14,17 +14,12 @@
     <div id="main-navbar" class="navbar-menu">
       <div class="navbar-start">
         <div class="navbar-item">
-          <router-link to="home">
-            <i class="fa fa-home"></i> Home
-          </router-link>
-        </div>
-        <div class="navbar-item">
-          <router-link to="search">
+          <router-link to="/search">
             <i class="fa fa-search"></i> Search
           </router-link>
         </div>
         <div class="navbar-item" v-if="isAdminUser">
-          <router-link to="admin/users">
+          <router-link to="/admin/users">
             <i class="fa fa-users"></i> Users
           </router-link>
         </div>
@@ -38,7 +33,7 @@
           </div>
           <div class="navbar-dropdown is-boxed">
             <div class="navbar-item">
-              <router-link to="user/change-password">
+              <router-link to="/user/change-password">
                 <span>
                   <i class="fa fa-key"></i> Change Password
                 </span>

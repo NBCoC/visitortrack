@@ -4,23 +4,25 @@
       <div class="container">
         <router-view />
       </div>
-      <prompt-dialog />
+      <modal />
     </div>
 </template>
 <script>
 import Vue from 'vue';
-import CurrentUser from './mixins/current-user';
+import ContextUser from './mixins/context-user';
+import TaskHelper from './mixins/task-helper';
 import ToggleNavbarBurger from './directives/toggle-navbar-burger';
 import Navbar from './components/navbar.vue';
-import PromptDialog from './components/prompt-dialog.vue';
+import Modal from './components/modal.vue';
 
-Vue.mixin(CurrentUser);
+Vue.mixin(ContextUser);
+Vue.mixin(TaskHelper);
 Vue.directive('toggle-navbar-burger', ToggleNavbarBurger);
 
 export default {
   components: {
     navbar: Navbar,
-    'prompt-dialog': PromptDialog
+    modal: Modal
   }
 };
 </script>

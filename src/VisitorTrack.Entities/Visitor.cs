@@ -6,10 +6,6 @@ namespace VisitorTrack.Entities
     [JsonObject(NamingStrategyType = typeof(LowercaseNamingStrategy))]
     public class Visitor : VisitorSearch
     {
-        public string ContactNumber { get; set; }
-
-        public string EmailAddress { get; set; }
-
         public string Description { get; set; }
 
         public DateTimeOffset? BecameMemberOn { get; set; }

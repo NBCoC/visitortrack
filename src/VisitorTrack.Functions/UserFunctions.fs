@@ -33,8 +33,8 @@ module UpdateUser =
 
             let! payload = req.TryGetDto<User>()
             
-            let toRequest (model : User) : UpdateUserRequest = {
-                UserId = Utility.getEntityId req
+            let toRequest (model : User) : UpdateEntityRequest<User> = {
+                EntityId = Utility.getEntityId req
                 ContextUserId = Utility.getContextUserId req
                 Options = Settings.getStorageOptions ()
                 Model = model
@@ -64,7 +64,7 @@ module CreateUser =
 
             let! payload = req.TryGetDto<User>()
 
-            let toRequest (model : User) : CreateUserRequest = 
+            let toRequest (model : User) : CreateEntityRequest<User> = 
                 model.Password <- Settings.getDefaultPassword()
                 {
                     Options = Settings.getStorageOptions ()
@@ -211,7 +211,7 @@ module UpdateUserPassword =
 module ResetUserPassword =
 
     [<FunctionName("ResetUserPasswordHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
         async {
             log.Info(sprintf "Executing reset user password func...")
 

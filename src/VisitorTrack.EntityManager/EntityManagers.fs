@@ -199,6 +199,70 @@ module VisitorManager =
 
         EntityManager.executeTask request.Options CollectionId.Visitor task
 
+    let update (request : UpdateEntityRequest<Visitor>) =
+
+        let task (client: DocumentClient) databaseId collectionId = 
+            result {
+                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
+
+                do! EntityManager.checkEditorRole authorizedUser
+
+                let! validFullName = String254.create "Full Name" request.Model.FullName
+                let! validDescription = String254.create "Description" request.Model.Description
+
+                let! entityId = EntityId.create request.EntityId
+                let! entity = EntityManager.find<Visitor> request.Options collectionId entityId
+
+                entity.FullName <- String254.value validFullName
+                entity.Description <- String254.value validDescription
+                entity.StatusId <- request.Model.StatusId
+                entity.AgeGroupId <- request.Model.AgeGroupId
+                entity.FirstVisitedOn <- request.Model.FirstVisitedOn
+                entity.BecameMemberOn <- request.Model.BecameMemberOn
+
+                return! EntityManager.replace client databaseId collectionId entityId entity 
+            }
+        
+        EntityManager.executeTask request.Options CollectionId.Visitor task
+
+    let create (request : CreateEntityRequest<Visitor>) =
+
+        let task (client: DocumentClient) databaseId collectionId = 
+            result {
+                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
+
+                do! EntityManager.checkEditorRole authorizedUser
+
+                let! validFullName = String254.create "Full Name" request.Model.FullName
+                let fullName = String254.value validFullName
+
+                let! hasPropertyValue = EntityManager.hasPropertyValue client databaseId collectionId "fullName" fullName
+
+                if hasPropertyValue then
+                    return! 
+                        sprintf "Visitor with full name of '%s' already exists" fullName 
+                        |> Result.Error 
+                else
+                    let! validDescription = String254.create "Description" request.Model.Description
+
+                    let visitor = 
+                        Visitor (
+                            FullName = fullName,
+                            Description = String254.value validDescription,
+                            AgeGroupId = request.Model.AgeGroupId,
+                            StatusId = request.Model.StatusId,
+                            CreatedOn = DateTimeOffset.UtcNow,
+                            FirstVisitedOn = request.Model.FirstVisitedOn,
+                            BecameMemberOn = request.Model.BecameMemberOn
+                        )
+
+                    return! EntityManager.insert client databaseId collectionId visitor 
+            }
+
+        EntityManager.executeTask request.Options CollectionId.Visitor task
+
 [<RequireQualifiedAccess>]
 module UserManager =
 
@@ -217,7 +281,7 @@ module UserManager =
         EntityManager.find<ReadonlyUser> opts CollectionId.User
 
     let delete request =
-        EntityManager.delete request CollectionId.Visitor
+        EntityManager.delete request CollectionId.User
 
     let resetPassword (request : ResetPasswordRequest) =
 
@@ -251,10 +315,13 @@ module UserManager =
                 let! validOldPassword = Password.create "Old Password" request.Model.OldPassword
                 let! validNewPassword = Password.create "New Password" request.Model.NewPassword
 
+                let! (HashedPassword hashedOldPassword) = Password.apply HashProvider.hash validOldPassword
                 let! (HashedPassword hashedNewPassword) = Password.apply HashProvider.hash validNewPassword
-
-                if Password.equals validOldPassword validNewPassword then
-                    return! Result.Error "Old Password must be different than New Password"
+                
+                if authorizedUser.Password <> hashedOldPassword then
+                    return! Result.Error "Old password is not valid"
+                elif Password.equals validOldPassword validNewPassword then
+                    return! Result.Error "Old password must be different than New password"
                 else
                     let! entityId = EntityId.create authorizedUser.Id
 
@@ -300,18 +367,18 @@ module UserManager =
         
         EntityManager.executeTask opts CollectionId.User task
 
-    let update (request : UpdateUserRequest) =
+    let update (request : UpdateEntityRequest<User>) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
                 let! contextUserId = ContextUserId.create request.ContextUserId
                 let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
 
-                do! EntityManager.checkEditorRole authorizedUser
+                do! EntityManager.checkAdminRole authorizedUser
 
                 let! validDisplayName = String254.create "Display Name" request.Model.DisplayName
 
-                let! entityId = EntityId.create request.UserId
+                let! entityId = EntityId.create request.EntityId
                 let! entity = EntityManager.find<ReadonlyUser> request.Options collectionId entityId
 
                 entity.DisplayName <- String254.value validDisplayName
@@ -322,14 +389,14 @@ module UserManager =
         
         EntityManager.executeTask request.Options CollectionId.User task
 
-    let create (request : CreateUserRequest) =
+    let create (request : CreateEntityRequest<User>) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
                 let! contextUserId = ContextUserId.create request.ContextUserId
                 let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
 
-                do! EntityManager.checkEditorRole authorizedUser
+                do! EntityManager.checkAdminRole authorizedUser
 
                 let! validEmailAddress = EmailAddress.create request.Model.EmailAddress
                 let emailAddress = EmailAddress.value validEmailAddress
@@ -337,7 +404,9 @@ module UserManager =
                 let! hasPropertyValue = EntityManager.hasPropertyValue client databaseId collectionId "emailAddress" emailAddress
 
                 if hasPropertyValue then
-                    return! sprintf "User with email address of '%s' already exists" emailAddress |> Result.Error 
+                    return! 
+                        sprintf "User with email address of '%s' already exists" emailAddress 
+                        |> Result.Error 
                 else
                     let! validDisplayName = String254.create "Display Name" request.Model.DisplayName
                     let! password = Password.create "Password" request.Model.Password

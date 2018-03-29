@@ -6,9 +6,71 @@ open System.Net.Http
 open Microsoft.Azure.WebJobs
 open Microsoft.Azure.WebJobs.Host
 open Microsoft.Azure.WebJobs.Extensions.Http
+open VisitorTrack.Entities
 open VisitorTrack.EntityManager
 open VisitorTrack.EntityManager.CustomTypes
 open VisitorTrack.EntityManager.Extensions
+
+module UpdateVisitor =
+
+    [<FunctionName("UpdateVisitorHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "put")>] req: HttpRequestMessage, log: TraceWriter) = 
+        async {
+            log.Info(sprintf "Executing update visitor func...")
+
+            let! payload = req.TryGetDto<Visitor>()
+            
+            let toRequest (model : Visitor) : UpdateEntityRequest<Visitor> = {
+                EntityId = Utility.getEntityId req
+                ContextUserId = Utility.getContextUserId req
+                Options = Settings.getStorageOptions ()
+                Model = model
+            }
+
+            let createRequest () =
+                Result.ofOption "DTO payload is required" payload
+                |> Result.map toRequest
+                |> Result.bind VisitorManager.update
+
+            let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+            return
+                Utility.validateToken req
+                |> Result.bind createRequest
+                |> Result.either ok error
+                
+        } |> Async.RunSynchronously
+
+module CreateVisitor =
+
+    [<FunctionName("CreateVisitorHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "post")>] req: HttpRequestMessage, log: TraceWriter) = 
+        async {
+            log.Info(sprintf "Executing create visitor func...")
+
+            let! payload = req.TryGetDto<Visitor>()
+
+            let toRequest (model : Visitor) : CreateEntityRequest<Visitor> = {
+                    Options = Settings.getStorageOptions ()
+                    ContextUserId = Utility.getContextUserId req
+                    Model = model
+                }
+
+            let createRequest () =
+                Result.ofOption "DTO payload is required" payload
+                |> Result.map toRequest
+                |> Result.bind VisitorManager.create
+
+            let ok entityId = req.CreateResponse(HttpStatusCode.OK, EntityId.value entityId)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+            return
+                Utility.validateToken req
+                |> Result.bind createRequest
+                |> Result.either ok error
+
+        } |> Async.RunSynchronously
 
 module GetStatusList =
 

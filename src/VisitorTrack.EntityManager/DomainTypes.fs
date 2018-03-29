@@ -48,28 +48,28 @@ module CustomTypes =
         Model: AuthenticateUser
     }
 
-    type UpdateUserRequest = {
+    type UpdateEntityRequest<'Entity> = {
         Options: StorageOptions
         ContextUserId: string
-        UserId: string
-        Model: User
+        EntityId: string
+        Model: 'Entity
     }
 
-    type CreateUserRequest = {
+    type CreateEntityRequest<'Entity> = {
         Options: StorageOptions
         ContextUserId: string
-        Model: User
-    }
-
-    type VisitorSearchRequest = {
-        Options: StorageOptions
-        Text: string
+        Model: 'Entity
     }
 
     type DeleteEntityRequest = {
         Options: StorageOptions
         ContextUserId: string
         EntityId: string
+    }
+
+     type VisitorSearchRequest = {
+        Options: StorageOptions
+        Text: string
     }
 
     type CollectionId =

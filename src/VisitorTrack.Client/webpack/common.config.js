@@ -62,7 +62,8 @@ module.exports = {
       vuex: resolve('../node_modules/vuex/dist/vuex.js'),
       'vue-router': resolve('../node_modules/vue-router/dist/vue-router.js'),
       axios: resolve('../node_modules/axios/dist/axios.js'),
-      bluebird: resolve('../node_modules/bluebird/js/browser/bluebird.core.js')
+      bluebird: resolve('../node_modules/bluebird/js/browser/bluebird.core.js'),
+      'bulma-calendar': resolve('../node_modules/bulma-calendar/dist/bulma-calendar.js')
     }
   },
   plugins: [new ExtractTextPlugin('styles.min.css?v=[chunkhash]')]

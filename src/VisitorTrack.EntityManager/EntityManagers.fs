@@ -75,7 +75,7 @@ module EntityManager =
 
             let sql = 
                 ContextUserId.value id 
-                |> sprintf "SELECT * FROM UserCollection WHERE UserCollection.id = '%s'"
+                |> sprintf "SELECT * FROM u WHERE u.id = '%s'"
             
             return!
                 client.CreateDocumentQuery<User>(uri, sql).ToArray()
@@ -148,12 +148,10 @@ module EntityManager =
     let internal hasPropertyValue (client: DocumentClient) databaseId collectionId (propertyName : string) propertyValue = 
         result {
             let uri = getDocumentCollectionUri databaseId collectionId
-            let collection = CollectionId.Value collectionId
             let predicate _ = true
 
             let sql = 
-                String.Format("SELECT * FROM {0} WHERE {0}.{1} = '{2}'", 
-                    collection, propertyName, propertyValue)
+                String.Format("SELECT * FROM a WHERE a.{0} = '{1}'", propertyName, propertyValue)
             
             return
                 client.CreateDocumentQuery(uri, sql).ToArray()
@@ -187,10 +185,9 @@ module VisitorManager =
                 else
                     let sql = 
                         String.Format(@"SELECT TOP 25 
-                                            id, fullName, statusId, ageGroupId
-                                        FROM VisitorCollection 
-                                        WHERE VisitorCollection.fullName 
-                                        LIKE '%{0}%'", 
+                                            v.id, v.fullName, v.statusId, v.ageGroupId
+                                        FROM v 
+                                        WHERE CONTAINS(v.fullName, '{0}')", 
                             request.Text)
 
                     return 
@@ -209,13 +206,18 @@ module VisitorManager =
                 do! EntityManager.checkEditorRole authorizedUser
 
                 let! validFullName = String254.create "Full Name" request.Model.FullName
-                let! validDescription = String254.create "Description" request.Model.Description
+                let! description =
+                        if String.IsNullOrEmpty(request.Model.Description) then
+                            Ok String.Empty
+                        else
+                            String750.create "Description" request.Model.Description
+                            |> Result.map String750.value
 
                 let! entityId = EntityId.create request.EntityId
                 let! entity = EntityManager.find<Visitor> request.Options collectionId entityId
 
                 entity.FullName <- String254.value validFullName
-                entity.Description <- String254.value validDescription
+                entity.Description <- description
                 entity.StatusId <- request.Model.StatusId
                 entity.AgeGroupId <- request.Model.AgeGroupId
                 entity.FirstVisitedOn <- request.Model.FirstVisitedOn
@@ -245,12 +247,17 @@ module VisitorManager =
                         sprintf "Visitor with full name of '%s' already exists" fullName 
                         |> Result.Error 
                 else
-                    let! validDescription = String254.create "Description" request.Model.Description
+                    let! description =
+                        if String.IsNullOrEmpty(request.Model.Description) then
+                            Ok String.Empty
+                        else
+                            String750.create "Description" request.Model.Description
+                            |> Result.map String750.value
 
                     let visitor = 
                         Visitor (
                             FullName = fullName,
-                            Description = String254.value validDescription,
+                            Description = description,
                             AgeGroupId = request.Model.AgeGroupId,
                             StatusId = request.Model.StatusId,
                             CreatedOn = DateTimeOffset.UtcNow,
@@ -343,9 +350,9 @@ module UserManager =
                 let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
 
                 let sql = 
-                    String.Format(@"SELECT * FROM UserCollection 
-                                    WHERE UserCollection.emailAddress = '{0}' 
-                                    AND UserCollection.password = '{1}'", 
+                    String.Format(@"SELECT * FROM u 
+                                    WHERE u.emailAddress = '{0}' 
+                                    AND u.password = '{1}'", 
                          EmailAddress.value validEmailAddress, hashedPassword)
 
                 return! 

@@ -1,8 +1,9 @@
 <template>
   <div class="page">
- 
-      <input class="input" type="text" placeholder="Search members / visitors...">
-  
+      <form @submit.prevent="search">
+        <input type="text" class="input" placeholder="Search members / visitors..." v-model="filterText">
+      </form>
+      
       <table class="table is-bordered is-striped is-hoverable is-fullwidth" v-show="dataSource.length">
         <thead>
           <tr>
@@ -29,31 +30,23 @@
   </div>
 </template>
 <script>
+import { searchVisitor } from '../api';
+import { apiError } from '../bus';
+
 export default {
   data() {
     return {
-      filter: '',
-      dataSource: [
-        {
-          id: 1,
-          fullName: 'Jose Diaz',
-          statusName: 'Active',
-          ageGroupName: 'Unknown'
-        },
-        {
-          id: 2,
-          fullName: 'Liz Howell',
-          statusName: 'Member',
-          ageGroupName: '60+'
-        },
-        {
-          id: 3,
-          fullName: 'Tony Starks',
-          statusName: 'Inactive',
-          ageGroupName: '29 - 39'
-        }
-      ]
+      filterText: '',
+      dataSource: []
     };
+  },
+  methods: {
+    search() {
+      const that = this;
+      searchVisitor(that.token, that.filterText || '')
+        .then(result => (that.dataSource = result))
+        .catch(apiError);
+    }
   }
 };
 </script>

@@ -7,7 +7,7 @@
           <th>Email</th>
           <th>Role</th>
           <th class="action-items">
-            <router-link class="button is-success is-small" :to="{ name: 'User' }">
+            <router-link class="button is-success is-small" to="/admin/user">
               <i class="fa fa-plus"></i>
             </router-link>
           </th>

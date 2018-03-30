@@ -79,7 +79,7 @@ export default {
   },
   data() {
     return {
-      model: {},
+      model: { roleId: 0 },
       roles: []
     };
   },

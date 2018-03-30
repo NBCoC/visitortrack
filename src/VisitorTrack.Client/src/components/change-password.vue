@@ -13,9 +13,9 @@
               <div class="card-content">
                 <div class="content">
                   <div class="field">
-                    <label class="label">Current Password</label>
+                    <label class="label">Old Password</label>
                     <div class="control">
-                      <input class="input" type="password" placeholder="Current Password..." v-model="oldPassword">
+                      <input class="input" type="password" placeholder="Old Password..." v-model="oldPassword">
                     </div>
                   </div>
 

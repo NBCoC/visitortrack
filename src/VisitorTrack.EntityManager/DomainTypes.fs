@@ -12,6 +12,8 @@ module CustomTypes =
 
     type String254 = private String254 of string
 
+    type String750 = private String750 of string
+
     type EmailAddress = private EmailAddress of string
 
     type Password = private Password of string
@@ -152,6 +154,18 @@ module CustomTypes =
         let value x = apply id x
 
         let equals (String254 x) (String254 y) =
+            x = y
+
+    module String750 =
+        
+        let create propertyName value =
+            create propertyName 750 String750 value
+
+        let apply f (String750 x) = f x
+
+        let value x = apply id x
+
+        let equals (String750 x) (String750 y) =
             x = y
 
     module Password =

@@ -1,5 +1,6 @@
 import '../node_modules/bulma/css/bulma.css';
 import '../node_modules/font-awesome/css/font-awesome.css';
+import '../node_modules/bulma-calendar/dist/bulma-calendar.min.css';
 import './styles.css';
 
 import Promise from 'bluebird';

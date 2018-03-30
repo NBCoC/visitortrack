@@ -4,7 +4,8 @@ import Home from './components/home.vue';
 import SignIn from './components/sign-in.vue';
 import Search from './components/search.vue';
 import UserList from './components/user-list.vue';
-import User from './components/user.vue';
+import UpsertUser from './components/upsert-user.vue';
+import UpsertVisitor from './components/upsert-visitor.vue';
 import ChangePassword from './components/change-password.vue';
 
 Vue.use(VueRouter);
@@ -42,10 +43,29 @@ export default new VueRouter({
       meta: { adminView: true }
     },
     {
-      path: '/admin/user/:id([0-9a-f]{8}-?[0-9a-f]{4}-?[1-5][0-9a-f]{3}-?[89ab][0-9a-f]{3}-?[0-9a-f]{12})',
-      component: User,
+      path: '/admin/user',
+      component: UpsertUser,
+      name: 'User',
+      meta: { adminView: true }
+    },
+    {
+      path:
+        '/admin/user/:id([0-9a-f]{8}-?[0-9a-f]{4}-?[1-5][0-9a-f]{3}-?[89ab][0-9a-f]{3}-?[0-9a-f]{12})',
+      component: UpsertUser,
       name: 'User',
       meta: { adminView: true },
+      props: true
+    },
+    {
+      path: '/visitor',
+      component: UpsertVisitor,
+      name: 'Visitor'
+    },
+    {
+      path:
+        '/visitor/:id([0-9a-f]{8}-?[0-9a-f]{4}-?[1-5][0-9a-f]{3}-?[89ab][0-9a-f]{3}-?[0-9a-f]{12})',
+      component: UpsertVisitor,
+      name: 'Visitor',
       props: true
     },
     {

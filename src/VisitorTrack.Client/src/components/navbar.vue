@@ -14,10 +14,17 @@
     <div id="main-navbar" class="navbar-menu">
       <div class="navbar-start">
         <div class="navbar-item">
+          <router-link to="/visitor">
+            <i class="fa fa-plus"></i> New Visitor
+          </router-link>
+        </div>
+
+        <div class="navbar-item">
           <router-link to="/search">
             <i class="fa fa-search"></i> Search
           </router-link>
         </div>
+
         <div class="navbar-item" v-if="isAdminUser">
           <router-link to="/admin/users">
             <i class="fa fa-users"></i> Users

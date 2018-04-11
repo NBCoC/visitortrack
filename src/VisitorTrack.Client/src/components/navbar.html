@@ -1,0 +1,60 @@
+<template bindable="user">
+  <nav class="navbar is-light">
+    <div class="navbar-brand">
+      <a class="navbar-item has-text-weight-bold" href="#/main/home">
+        Visitor-Track
+      </a>
+      <div class="navbar-burger burger" data-target="main-navbar-menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
+
+    <div id="main-navbar-menu" class="navbar-menu">
+      <div class="navbar-start">
+        <a class="navbar-item" href="#/main/home">
+          <span class="icon">
+            <i class="oi" data-glyph="home"></i>
+          </span>
+          <span>Home</span>
+        </a>
+        <a class="navbar-item" href="#/main/search">
+          <span class="icon">
+            <i class="oi" data-glyph="magnifying-glass"></i>
+          </span>
+          <span>Search</span>
+        </a>
+        <a class="navbar-item" href="#/main/administration/users" if.bind="user.isAdmin">
+          <span class="icon">
+            <i class="oi" data-glyph="people"></i>
+          </span>
+          <span>Users</span>
+        </a>
+      </div>
+
+      <div class="navbar-end">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link">
+            ${ user.displayName }
+          </a>
+          <div class="navbar-dropdown is-boxed">
+            <a class="navbar-item" click.trigger="onChangePassword()">
+              <span class="icon">
+                <i class="oi" data-glyph="key"></i>
+              </span>
+              <span>Change Password</span>
+            </a>
+            <hr class="navbar-divider">
+            <a class="navbar-item" click.trigger="onSignOut()">
+              <span class="icon">
+                <i class="oi" data-glyph="account-logout"></i>
+              </span>
+              <span>Sign Out</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</template>

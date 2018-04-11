@@ -1,0 +1,49 @@
+<template>
+  <div class="page columns is-mobile">
+    <div class="column"></div>
+    <div class="column is-three-quarters-mobile">
+      <form id="sign-in-form" submit.delegate="signIn()" visitor-track-loading-form-indicator>
+        <div class="card">
+          <header class="card-header">
+            <div class="card-header-title is-centered">
+              Visitor-Track
+            </div>
+          </header>
+          <div class="card-content">
+            <div class="content">
+              <div class="field">
+                <div class="control has-icons-left">
+                  <input class="input" type="email" placeholder="Email" attach-focus="true" value.bind="model.emailAddress & validate">
+                  <span class="icon is-small is-left">
+                    <i class="oi" data-glyph="envelope-closed"></i>
+                  </span>
+                </div>
+                <p class="help is-danger"></p>
+              </div>
+
+              <div class="field">
+                <div class="control has-icons-left">
+                  <input class="input" type="password" placeholder="Password" value.bind="model.password & validate">
+                  <span class="icon is-small is-left">
+                    <i class="oi" data-glyph="key"></i>
+                  </span>
+                </div>
+                <p class="help is-danger"></p>
+              </div>
+
+              <div class="field">
+                <button type="submit" class="button is-primary full-width">
+                  <span class="icon">
+                    <i class="oi" data-glyph="account-login"></i>
+                  </span>
+                  <span>Sign In</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="column"></div>
+  </div>
+</template>

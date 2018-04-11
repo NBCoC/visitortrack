@@ -31,24 +31,38 @@
   }
 }
 div.page {
-  -webkit-animation: fadeIn 1s;
-  animation: fadeIn 1s;
+  -webkit-animation: fadeIn 0.5s;
+  animation: fadeIn 0.5s;
   padding: 10px;
 }
-[v-cloak] {
-  display: none;
-}
+
 .full-width {
   width: 100%;
 }
-a {
-  color: black;
+
+#sign-in-form {
+  margin: 0 auto;
+  max-width: 300px;
+  padding-top: 50px;
 }
-.table th {
-  text-align: left;
-  vertical-align: middle !important;
+
+.dialog-card {
+  max-width: 300px;
 }
-.table td {
-  text-align: left;
-  vertical-align: middle !important;
+
+#search-page table {
+  margin-top: 10px;
+}
+
+#search-page form {
+  margin: 0 auto;
+  max-width: 300px;
+}
+
+#search-page table {
+  margin: 0 auto;
+}
+
+#user-admin-page table {
+  margin: 0 auto;
 }

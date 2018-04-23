@@ -4,10 +4,10 @@ using System;
 namespace VisitorTrack.Entities
 {
      [JsonObject(NamingStrategyType = typeof(LowercaseNamingStrategy))]
-    public class VisitorSearch : RecentVisitor
+    public class VisitorSearch : VisitorLite
     {
         public AgeGroupEnum AgeGroupId { get; set; }
 
-        public string AgeGroupName => EntityHelper.GetAgeGroupName(AgeGroupId);
+        public string AgeGroupName => AgeGroupId.GetName();
     }
 }

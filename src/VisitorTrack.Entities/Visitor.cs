@@ -8,16 +8,10 @@ namespace VisitorTrack.Entities
     {
         public string Description { get; set; }
 
-        public DateTimeOffset? BecameMemberOn { get; set; }
-
-        public DateTimeOffset? FirstVisitedOn { get; set; }
-
         public DateTimeOffset CreatedOn { get; set; }
 
         public AgeGroupEnum[] KidsAgeGroups { get; set; } = new AgeGroupEnum[0];
 
-        public CheckListItem[] CheckList { get; set; } = new CheckListItem[0];
-
-        public Comment[] Comments { get; set; } = new Comment[0];
+        public VisitorCheckListItem[] CheckList { get; set; } = new VisitorCheckListItem[0];
     }
 }

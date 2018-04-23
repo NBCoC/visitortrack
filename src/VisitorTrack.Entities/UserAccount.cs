@@ -1,12 +1,11 @@
+using System;
 using Newtonsoft.Json;
 
 namespace VisitorTrack.Entities
 {
     [JsonObject(NamingStrategyType = typeof(LowercaseNamingStrategy))]
-    public class Lookup
+    public class UserAccount : User
     {
-        public int Id { get; set; }
-
-        public string Name { get; set; }
+        public string Password { get; set; }
     }
 }

@@ -33,7 +33,7 @@ module UpdateUser =
 
             let! payload = req.TryGetDto<User>()
             
-            let toRequest (model : User) : UpdateEntityRequest<User> = {
+            let toRequest (model : User) : UpdateEntity<User> = {
                 EntityId = Utility.getEntityId req
                 ContextUserId = Utility.getContextUserId req
                 Options = Settings.getStorageOptions ()
@@ -62,9 +62,9 @@ module CreateUser =
         async {
             log.Info(sprintf "Executing create user func...")
 
-            let! payload = req.TryGetDto<User>()
+            let! payload = req.TryGetDto<UserAccount>()
 
-            let toRequest (model : User) : CreateEntityRequest<User> = 
+            let toRequest (model : UserAccount) : CreateEntity<UserAccount> = 
                 model.Password <- Settings.getDefaultPassword()
                 {
                     Options = Settings.getStorageOptions ()
@@ -96,7 +96,7 @@ module DeleteUser =
         let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
-        let toRequest () : DeleteEntityRequest = {
+        let toRequest () : DeleteEntity = {
             Options = Settings.getStorageOptions ()
             ContextUserId = Utility.getContextUserId req
             EntityId = Utility.getEntityId req
@@ -154,16 +154,16 @@ module AuthenticateUser =
         async {
             log.Info(sprintf "Executing authenticate user func...")
 
-            let! payload = req.TryGetDto<AuthenticateUser>()
+            let! payload = req.TryGetDto<UserAuthentication>()
 
-            let toRequest (model: AuthenticateUser) : AuthenticateUserRequest = {
+            let toRequest (model: UserAuthentication) : AuthenticateUser = {
                 Options = Settings.getStorageOptions ()
                 Model = model
             }
 
-            let ok (model: ReadonlyUser) = 
+            let ok (model: User) = 
                 let result = 
-                    UserAuthenticated (
+                    UserAuthenticationResult (
                         Token = Settings.getToken(),
                         User = model
                     )
@@ -187,7 +187,7 @@ module UpdateUserPassword =
 
             let! payload = req.TryGetDto<UpdateUserPassword>()
 
-            let toRequest (model: UpdateUserPassword) : UpdatePasswordRequest = {
+            let toRequest (model: UpdateUserPassword) : UpdatePassword = {
                 ContextUserId = Utility.getContextUserId req
                 Options = Settings.getStorageOptions ()
                 Model = model
@@ -215,7 +215,7 @@ module ResetUserPassword =
         async {
             log.Info(sprintf "Executing reset user password func...")
 
-            let toRequest () : ResetPasswordRequest = {
+            let toRequest () : ResetPassword = {
                 ContextUserId = Utility.getContextUserId req
                 UserId = Utility.getEntityId req
                 Options = Settings.getStorageOptions ()

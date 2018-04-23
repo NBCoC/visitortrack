@@ -11,9 +11,5 @@ namespace VisitorTrack.Entities
         public string Description { get; set; }
 
         public string Type { get; set; }
-
-        public DateTimeOffset? CompletedOn { get; set; }
-
-        public string CompletedBy { get; set; }
     }
 }

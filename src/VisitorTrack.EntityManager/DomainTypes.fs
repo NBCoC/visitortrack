@@ -32,55 +32,64 @@ module CustomTypes =
         AccountKey: string
     }
 
-    type ResetPasswordRequest = {
+    type ResetPassword = {
         Options: StorageOptions
         ContextUserId: string
         UserId: string
         Password: string
     }
 
-    type UpdatePasswordRequest = {
+    type UpdatePassword = {
         Options: StorageOptions
         ContextUserId: string
         Model: UpdateUserPassword
     }
 
-    type AuthenticateUserRequest = {
+    type AuthenticateUser = {
         Options: StorageOptions
-        Model: AuthenticateUser
+        Model: UserAuthentication
     }
 
-    type UpdateEntityRequest<'Entity> = {
+    type UpdateEntity<'Entity> = {
         Options: StorageOptions
         ContextUserId: string
         EntityId: string
         Model: 'Entity
     }
 
-    type CreateEntityRequest<'Entity> = {
+    type CreateEntity<'Entity> = {
         Options: StorageOptions
         ContextUserId: string
         Model: 'Entity
     }
 
-    type DeleteEntityRequest = {
+    type DeleteEntity = {
         Options: StorageOptions
         ContextUserId: string
         EntityId: string
     }
 
-     type VisitorSearchRequest = {
+    type VisitorSearch = {
         Options: StorageOptions
         Text: string
+    }
+
+    type UpdateVisitorCheckListItem = {
+        Options: StorageOptions
+        ContextUserId: string
+        VisitorId: string
+        Model: VisitorCheckListItem
     }
 
     type CollectionId =
         | User
         | Visitor
+        | CheckList
             with static member Value collectionId =
                     match collectionId with
                         | User -> "UserCollection"
                         | Visitor -> "VisitorCollection"
+                        | CheckList -> "CheckListCollection"
 
     let private create propertyName length dataType value =
         if String.IsNullOrEmpty(value) then

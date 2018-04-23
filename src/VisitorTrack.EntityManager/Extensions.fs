@@ -14,7 +14,7 @@ module Exceptions =
 [<RequireQualifiedAccess>]
 module Result =
     open Exceptions
-    
+
     /// Apply Ok or Error function
     let either ok error x =
         match x with

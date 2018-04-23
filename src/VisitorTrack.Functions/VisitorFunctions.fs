@@ -20,7 +20,7 @@ module UpdateVisitor =
 
             let! payload = req.TryGetDto<Visitor>()
             
-            let toRequest (model : Visitor) : UpdateEntityRequest<Visitor> = {
+            let toRequest (model : Visitor) : UpdateEntity<Visitor> = {
                 EntityId = Utility.getEntityId req
                 ContextUserId = Utility.getContextUserId req
                 Options = Settings.getStorageOptions ()
@@ -51,7 +51,7 @@ module CreateVisitor =
 
             let! payload = req.TryGetDto<Visitor>()
 
-            let toRequest (model : Visitor) : CreateEntityRequest<Visitor> = {
+            let toRequest (model : Visitor) : CreateEntity<Visitor> = {
                     Options = Settings.getStorageOptions ()
                     ContextUserId = Utility.getContextUserId req
                     Model = model
@@ -71,19 +71,6 @@ module CreateVisitor =
                 |> Result.either ok error
 
         } |> Async.RunSynchronously
-
-module GetStatusList =
-
-    [<FunctionName("GetStatusListHttpTrigger")>]
-    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
-        log.Info(sprintf "Executing get status list func...")
-
-        let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
-        let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
-
-        Utility.validateToken req
-        |> Result.map VisitorManager.getStatusList
-        |> Result.either ok error
 
 module GetAgeGroups =
 
@@ -126,7 +113,7 @@ module DeleteVisitor =
         let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
-        let toRequest () : DeleteEntityRequest = {
+        let toRequest () : DeleteEntity = {
             Options = Settings.getStorageOptions ()
             ContextUserId = Utility.getContextUserId req
             EntityId = Utility.getEntityId req
@@ -149,7 +136,7 @@ module SearchVisitors =
         let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
         let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
 
-        let toRequest () : VisitorSearchRequest = {
+        let toRequest () : VisitorSearch = {
             Options = Settings.getStorageOptions ()
             Text = Utility.getVisitorSearchCriteria req
         }
@@ -161,3 +148,34 @@ module SearchVisitors =
         Utility.validateToken req
         |> Result.bind createRequest
         |> Result.either ok error
+
+module UpdateVisitorCheckListItem =
+
+    [<FunctionName("UpdateVisitorCheckListItemHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "put")>] req: HttpRequestMessage, log: TraceWriter) = 
+        async {
+            log.Info(sprintf "Executing update visitor check list item func...")
+
+            let! payload = req.TryGetDto<VisitorCheckListItem>()
+            
+            let toRequest (model : VisitorCheckListItem) : UpdateVisitorCheckListItem = {
+                VisitorId = Utility.getEntityId req
+                ContextUserId = Utility.getContextUserId req
+                Options = Settings.getStorageOptions ()
+                Model = model
+            }
+
+            let createRequest () =
+                Result.ofOption "DTO payload is required" payload
+                |> Result.map toRequest
+                |> Result.bind VisitorManager.updateCheckListItem
+
+            let ok _ = req.CreateResponse(HttpStatusCode.NoContent)
+            let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+            return
+                Utility.validateToken req
+                |> Result.bind createRequest
+                |> Result.either ok error
+                
+        } |> Async.RunSynchronously

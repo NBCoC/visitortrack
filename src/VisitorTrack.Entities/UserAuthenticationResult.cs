@@ -3,10 +3,10 @@ using Newtonsoft.Json;
 namespace VisitorTrack.Entities
 {
     [JsonObject(NamingStrategyType = typeof(LowercaseNamingStrategy))]
-    public class UserAuthenticated
+    public class UserAuthenticationResult
     {
         public string Token { get; set; }
 
-        public ReadonlyUser User { get; set; }
+        public User User { get; set; }
     }
 }

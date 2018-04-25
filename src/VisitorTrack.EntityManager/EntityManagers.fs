@@ -222,7 +222,7 @@ module VisitorManager =
                 let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
 
                 let today = DateTimeOffset.UtcNow
-                let startDate = DateTimeOffset(today.Year, today.Month, today.Day, 0, 0, 0, TimeSpan.Zero)
+                let startDate = DateTimeOffset(today.Year, 1, 1, 0, 0, 0, TimeSpan.Zero)
 
                 let memberSql =
                     String.Format(@"SELECT * FROM v

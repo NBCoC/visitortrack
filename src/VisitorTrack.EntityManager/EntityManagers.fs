@@ -226,13 +226,16 @@ module VisitorManager =
 
                 let memberSql =
                     String.Format(@"SELECT * FROM v
-                                    WHERE v.hasPlacedMembership = 1
-                                    AND v.becameMemberOn >= '{0}' AND v.becameMemberOn <= '{1}'", startDate, today)
+                                    WHERE v.hasPlacedMembership
+                                    AND v.becameMemberOn >= '{0}' 
+                                    AND v.becameMemberOn <= '{1}'", startDate, today)
 
                 let visitorSql =
                     String.Format(@"SELECT * FROM v
-                                    WHERE v.hasPlacedMembership = 0 AND v.isActive
-                                    AND v.firstVisitedOn >= '{0}' AND v.firstVisitedOn <= '{1}'", startDate, today)
+                                    WHERE NOT v.hasPlacedMembership
+                                    AND v.isActive
+                                    AND v.firstVisitedOn >= '{0}' 
+                                    AND v.firstVisitedOn <= '{1}'", startDate, today)
 
                 let memberGroups = 
                     client.CreateDocumentQuery<VisitorLite>(uri, memberSql).ToArray()

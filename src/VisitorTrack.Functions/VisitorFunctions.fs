@@ -179,3 +179,20 @@ module UpdateVisitorCheckListItem =
                 |> Result.either ok error
                 
         } |> Async.RunSynchronously
+
+module GetReport =
+
+    [<FunctionName("GetReportHttpTrigger")>]
+    let Run([<HttpTrigger(AuthorizationLevel.Anonymous, "get")>] req: HttpRequestMessage, log: TraceWriter) = 
+        log.Info(sprintf "Executing get report func...")
+
+        let opts = Settings.getStorageOptions ()
+        let ok dtos = req.CreateResponse(HttpStatusCode.OK, dtos)
+        let error message = req.CreateResponse(HttpStatusCode.BadRequest, message)
+
+        let createRequest () =
+            VisitorManager.getReport opts
+
+        Utility.validateToken req
+        |> Result.bind createRequest
+        |> Result.either ok error

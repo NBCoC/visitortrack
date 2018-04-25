@@ -198,7 +198,9 @@ module CustomTypes =
                 let value = String254.value string254
                 
                 if value.Contains("@") then
-                    value.ToLower().Trim() |> EmailAddress |> Ok 
+                    value.ToLower().Trim() 
+                    |> EmailAddress 
+                    |> Ok 
                 else Error "Email Address must contain an '@' sign"
 
             String254.create "Email Address" value

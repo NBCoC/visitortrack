@@ -15,15 +15,15 @@ module private HashProvider =
 
     let hash str =
         if String.IsNullOrEmpty(str) then
-            Result.Error "Value is required for hashing"
+            Result.Error "Cannot hash an empty string"
         else
             let postSalt = "_buffer_9#00!#8423-12834)*@$920*"
             let preSalt = "visitor_track_salt_"
             let data = Encoding.UTF8.GetBytes(sprintf "%s%s%s" preSalt str postSalt)
             use provider = new SHA256CryptoServiceProvider()
-            let hashed = provider.ComputeHash(data)
             
-            Convert.ToBase64String(hashed) 
+            provider.ComputeHash(data)
+            |> Convert.ToBase64String
             |> HashedPassword 
             |> Result.Ok
 
@@ -46,13 +46,13 @@ module private EntityManager =
             let! databaseId = DatabaseId.create opts.DatabaseId
             let ok _ = ()
 
-            let createDatabase (client: DocumentClient) databaseId =
+            let createDatabaseIfNotExists (client: DocumentClient) databaseId =
                 let database = Database(Id = DatabaseId.value databaseId)
                 
                 client.CreateDatabaseIfNotExistsAsync(database) 
                 |> Result.fromTask ok
 
-            let createCollection (client: DocumentClient) databaseId =
+            let createCollectionIfNotExists (client: DocumentClient) databaseId =
                 let uri = getDatabaseUri databaseId
                 let collection = DocumentCollection(Id = CollectionId.Value collectionId)
                 let options = RequestOptions (OfferThroughput = Nullable<int>(2500))
@@ -63,8 +63,8 @@ module private EntityManager =
             let uri = Uri(EndpointUrl.value endpointUrl)
             use client = new DocumentClient(uri, AccountKey.value accountKey)
 
-            do! createDatabase client databaseId
-            do! createCollection client databaseId
+            do! createDatabaseIfNotExists client databaseId
+            do! createCollectionIfNotExists client databaseId
 
             return! task client databaseId collectionId
         }
@@ -101,12 +101,12 @@ module private EntityManager =
         |> Result.fromTask ok
         |> Result.bind EntityId.create
 
-    let delete collectionId (request : DeleteEntity) =
+    let delete collectionId (data : DeleteEntity) =
 
-        let task (client : DocumentClient) databaseId collectionId =
+        let task (client: DocumentClient) databaseId collectionId =
             result {
-                let! entityId = EntityId.create request.EntityId
-                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! entityId = EntityId.create data.EntityId
+                let! contextUserId = ContextUserId.create data.ContextUserId
                 let! authorizedUser = getAuthorizedUser client databaseId contextUserId
                 
                 do! checkAdminRole authorizedUser
@@ -119,9 +119,9 @@ module private EntityManager =
                     |> Result.fromTask ok
             }
 
-        executeTask request.Options collectionId task
+        executeTask data.Options collectionId task
 
-    let find<'T> (opts: StorageOptions) collectionId entityId =
+    let find<'T> opts collectionId entityId =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
@@ -176,6 +176,13 @@ module CheckListManager =
 [<RequireQualifiedAccess>]
 module VisitorManager =
 
+    let private getDescription (model : Visitor) =
+        if String.IsNullOrEmpty(model.Description) then
+            Ok String.Empty
+        else
+            String750.create "Description" model.Description
+            |> Result.map String750.value
+
     let getAgeGroups () =
         AgeGroups.AsLookup();
 
@@ -185,13 +192,13 @@ module VisitorManager =
     let delete =
         EntityManager.delete CollectionId.Visitor
 
-    let search (request : CustomTypes.VisitorSearch) =
+    let search (data : CustomTypes.VisitorSearch) =
         
         let task (client : DocumentClient) databaseId collectionId =
             result {
                 let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
 
-                if String.IsNullOrEmpty(request.Text) then
+                if String.IsNullOrEmpty(data.Text) then
                     return [||]
                 else
                     let sql = 
@@ -200,46 +207,91 @@ module VisitorManager =
                                             v.isActive, v.becameMemberOn, v.firstVisitedOn
                                         FROM v 
                                         WHERE CONTAINS(v.fullName, '{0}')", 
-                            request.Text)
+                            data.Text)
 
                     return 
                         client.CreateDocumentQuery<VisitorSearch>(uri, sql).ToArray()
             }
 
-        EntityManager.executeTask request.Options CollectionId.Visitor task
+        EntityManager.executeTask data.Options CollectionId.Visitor task
 
-    let update (request : UpdateEntity<Visitor>) =
+    let getReport opts =
+        
+        let task (client: DocumentClient) databaseId collectionId = 
+            result {
+                let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
+
+                let today = DateTimeOffset.UtcNow
+                let startDate = DateTimeOffset(today.Year, today.Month, today.Day, 0, 0, 0, TimeSpan.Zero)
+
+                let memberSql =
+                    String.Format(@"SELECT * FROM v
+                                    WHERE v.hasPlacedMembership = 1
+                                    AND v.becameMemberOn >= '{0}' AND v.becameMemberOn <= '{1}'", startDate, today)
+
+                let visitorSql =
+                    String.Format(@"SELECT * FROM v
+                                    WHERE v.hasPlacedMembership = 0 AND v.isActive
+                                    AND v.firstVisitedOn >= '{0}' AND v.firstVisitedOn <= '{1}'", startDate, today)
+
+                let memberGroups = 
+                    client.CreateDocumentQuery<VisitorLite>(uri, memberSql).ToArray()
+                    |> Array.groupBy (fun x -> x.BecameMemberOn.Value.Month)
+
+                let visitorGroups = 
+                    client.CreateDocumentQuery<VisitorLite>(uri, visitorSql).ToArray()
+                    |> Array.groupBy (fun x -> x.FirstVisitedOn.Value.Month)
+
+                let createReportItem monthId =
+                    VisitorReportItem(MonthId = monthId)
+
+                let mapReportItem (dto : VisitorReportItem) =
+                    let byMonth (monthId, _) =
+                        monthId = dto.MonthId
+
+                    match Array.tryFind byMonth memberGroups with
+                        | None -> ()
+                        | Some (_, data) -> dto.Members <- data
+
+                    match Array.tryFind byMonth visitorGroups with
+                        | None -> ()
+                        | Some (_, data) -> dto.Visitors <- data
+
+                    dto
+
+                return [|1..12|] |> Array.map (createReportItem >> mapReportItem)
+            }
+
+        EntityManager.executeTask opts CollectionId.Visitor task
+        
+
+    let update (data : UpdateEntity<Visitor>) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! contextUserId = ContextUserId.create data.ContextUserId
                 let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
 
                 do! EntityManager.checkEditorRole authorizedUser
 
-                let! validFullName = String254.create "Full Name" request.Model.FullName
-                let! description =
-                        if String.IsNullOrEmpty(request.Model.Description) then
-                            Ok String.Empty
-                        else
-                            String750.create "Description" request.Model.Description
-                            |> Result.map String750.value
+                let! validFullName = String254.create "Full Name" data.Model.FullName
+                let! description = getDescription data.Model
 
-                let! entityId = EntityId.create request.EntityId
-                let! entity = EntityManager.find<Visitor> request.Options collectionId entityId
+                let! entityId = EntityId.create data.EntityId
+                let! entity = EntityManager.find<Visitor> data.Options collectionId entityId
 
                 entity.FullName <- String254.value validFullName
                 entity.Description <- description
-                entity.IsActive <- request.Model.IsActive
-                entity.HasPlacedMembership <- request.Model.HasPlacedMembership
-                entity.AgeGroupId <- request.Model.AgeGroupId
-                entity.FirstVisitedOn <- request.Model.FirstVisitedOn
-                entity.BecameMemberOn <- request.Model.BecameMemberOn
+                entity.IsActive <- data.Model.IsActive
+                entity.HasPlacedMembership <- data.Model.HasPlacedMembership
+                entity.AgeGroupId <- data.Model.AgeGroupId
+                entity.FirstVisitedOn <- data.Model.FirstVisitedOn
+                entity.BecameMemberOn <- data.Model.BecameMemberOn
 
                 return! EntityManager.replace client databaseId collectionId entityId entity 
             }
         
-        EntityManager.executeTask request.Options CollectionId.Visitor task
+        EntityManager.executeTask data.Options CollectionId.Visitor task
 
     let create (data : CreateEntity<Visitor>) =
 
@@ -278,12 +330,7 @@ module VisitorManager =
                 else
                     let! checkListData = getCheckList ()
 
-                    let! description =
-                        if String.IsNullOrEmpty(data.Model.Description) then
-                            Ok String.Empty
-                        else
-                            String750.create "Description" data.Model.Description
-                            |> Result.map String750.value
+                    let! description = getDescription data.Model
 
                     let visitor = 
                         Visitor (
@@ -315,6 +362,9 @@ module VisitorManager =
                 let! entityId = EntityId.create data.VisitorId
                 let! entity = EntityManager.find<Visitor> data.Options collectionId entityId
 
+                let! validComment = String750.create "Comment" data.Model.Comment
+                let! validCompletedBy = String254.create "Completed By" data.Model.CompletedBy
+
                 let! item =
                     entity.CheckList
                     |> Array.tryFind (fun x -> x.Id = data.Model.Id)
@@ -323,11 +373,18 @@ module VisitorManager =
                 let index =
                     Array.IndexOf (entity.CheckList, item)
 
-                item.CompletedOn <- data.Model.CompletedOn
-                item.Comment <- data.Model.Comment
-                item.CompletedBy <- data.Model.CompletedBy
+                let updateItem (oldItem : VisitorCheckListItem) =
+                    if oldItem.CompletedOn.HasValue then
+                        oldItem.CompletedOn <- Nullable<DateTimeOffset>()
+                        oldItem.Comment <- String.Empty
+                        oldItem.CompletedBy <- String.Empty
+                    else
+                        oldItem.CompletedOn <- data.Model.CompletedOn
+                        oldItem.Comment <- String750.value validComment
+                        oldItem.CompletedBy <- String254.value validCompletedBy
+                    oldItem
 
-                entity.CheckList.[index] <- item
+                entity.CheckList.[index] <- updateItem item
 
                 return! EntityManager.replace client databaseId collectionId entityId entity
             }
@@ -354,37 +411,37 @@ module UserManager =
     let delete =
         EntityManager.delete CollectionId.User
 
-    let resetPassword (request : ResetPassword) =
+    let resetPassword (data : ResetPassword) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! contextUserId = ContextUserId.create data.ContextUserId
                 let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
                 
                 do! EntityManager.checkAdminRole authorizedUser
 
-                let! validPassword = Password.create "Default Password" request.Password
+                let! validPassword = Password.create "Default Password" data.Password
                 let! (HashedPassword password) = Password.apply HashProvider.hash validPassword
                 
-                let! entityId = EntityId.create request.UserId
-                let! entity = EntityManager.find<UserAccount> request.Options collectionId entityId
+                let! entityId = EntityId.create data.UserId
+                let! entity = EntityManager.find<UserAccount> data.Options collectionId entityId
                 
                 entity.Password <- password
 
                 return! EntityManager.replace client databaseId collectionId entityId entity 
             }
 
-        EntityManager.executeTask request.Options CollectionId.User task
+        EntityManager.executeTask data.Options CollectionId.User task
 
-    let updatePassword (request : UpdatePassword) =
+    let updatePassword (data : UpdatePassword) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! contextUserId = ContextUserId.create data.ContextUserId
                 let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
 
-                let! validOldPassword = Password.create "Old Password" request.Model.OldPassword
-                let! validNewPassword = Password.create "New Password" request.Model.NewPassword
+                let! validOldPassword = Password.create "Old Password" data.Model.OldPassword
+                let! validNewPassword = Password.create "New Password" data.Model.NewPassword
 
                 let! (HashedPassword hashedOldPassword) = Password.apply HashProvider.hash validOldPassword
                 let! (HashedPassword hashedNewPassword) = Password.apply HashProvider.hash validNewPassword
@@ -401,14 +458,14 @@ module UserManager =
                     return! EntityManager.replace client databaseId collectionId entityId authorizedUser 
             }
 
-        EntityManager.executeTask request.Options CollectionId.User task
+        EntityManager.executeTask data.Options CollectionId.User task
 
-    let authenticate (request : AuthenticateUser) =
+    let authenticate (data : AuthenticateUser) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! validEmailAddress = EmailAddress.create request.Model.EmailAddress
-                let! validPassword = Password.create "Password" request.Model.Password
+                let! validEmailAddress = EmailAddress.create data.Model.EmailAddress
+                let! validPassword = Password.create "Password" data.Model.Password
                 let! (HashedPassword hashedPassword) = Password.apply HashProvider.hash validPassword
 
                 let uri = EntityManager.getDocumentCollectionUri databaseId collectionId
@@ -429,7 +486,7 @@ module UserManager =
                     |> Result.ofOption error
             }
 
-        EntityManager.executeTask request.Options CollectionId.User task
+        EntityManager.executeTask data.Options CollectionId.User task
 
     let getAll (opts: StorageOptions) =
 
@@ -442,38 +499,38 @@ module UserManager =
         
         EntityManager.executeTask opts CollectionId.User task
 
-    let update (request : UpdateEntity<User>) =
+    let update (data : UpdateEntity<User>) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! contextUserId = ContextUserId.create data.ContextUserId
                 let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
 
                 do! EntityManager.checkAdminRole authorizedUser
 
-                let! validDisplayName = String254.create "Display Name" request.Model.DisplayName
+                let! validDisplayName = String254.create "Display Name" data.Model.DisplayName
 
-                let! entityId = EntityId.create request.EntityId
-                let! entity = EntityManager.find<User> request.Options collectionId entityId
+                let! entityId = EntityId.create data.EntityId
+                let! entity = EntityManager.find<User> data.Options collectionId entityId
 
                 entity.DisplayName <- String254.value validDisplayName
-                entity.RoleId <- request.Model.RoleId
+                entity.RoleId <- data.Model.RoleId
                 
                 return! EntityManager.replace client databaseId collectionId entityId entity 
             }
         
-        EntityManager.executeTask request.Options CollectionId.User task
+        EntityManager.executeTask data.Options CollectionId.User task
 
-    let create (request : CreateEntity<UserAccount>) =
+    let create (data : CreateEntity<UserAccount>) =
 
         let task (client: DocumentClient) databaseId collectionId = 
             result {
-                let! contextUserId = ContextUserId.create request.ContextUserId
+                let! contextUserId = ContextUserId.create data.ContextUserId
                 let! authorizedUser = EntityManager.getAuthorizedUser client databaseId contextUserId
 
                 do! EntityManager.checkAdminRole authorizedUser
 
-                let! validEmailAddress = EmailAddress.create request.Model.EmailAddress
+                let! validEmailAddress = EmailAddress.create data.Model.EmailAddress
                 let emailAddress = EmailAddress.value validEmailAddress
 
                 let! hasPropertyValue = EntityManager.hasPropertyValue client databaseId collectionId "emailAddress" emailAddress
@@ -483,8 +540,8 @@ module UserManager =
                         sprintf "User with email address of '%s' already exists" emailAddress 
                         |> Result.Error 
                 else
-                    let! validDisplayName = String254.create "Display Name" request.Model.DisplayName
-                    let! password = Password.create "Password" request.Model.Password
+                    let! validDisplayName = String254.create "Display Name" data.Model.DisplayName
+                    let! password = Password.create "Password" data.Model.Password
                     let! (HashedPassword validPassword) = Password.apply HashProvider.hash password
 
                     let user = 
@@ -492,12 +549,12 @@ module UserManager =
                             DisplayName = String254.value validDisplayName,
                             EmailAddress = emailAddress,
                             Password = validPassword,
-                            RoleId = request.Model.RoleId
+                            RoleId = data.Model.RoleId
                         )
 
                     return! EntityManager.insert client databaseId collectionId user 
             }
 
-        EntityManager.executeTask request.Options CollectionId.User task
+        EntityManager.executeTask data.Options CollectionId.User task
 
     

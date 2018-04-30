@@ -8,9 +8,11 @@ namespace VisitorTrack.Entities
     {
         public string Description { get; set; }
 
-        public DateTimeOffset CreatedOn { get; set; }
+        public string EmailAddress { get; set; }
 
-        public AgeGroupEnum[] KidsAgeGroups { get; set; } = new AgeGroupEnum[0];
+        public string ContactNumber { get; set; }
+
+        public DateTimeOffset CreatedOn { get; set; }
 
         public VisitorCheckListItem[] CheckList { get; set; } = new VisitorCheckListItem[0];
     }

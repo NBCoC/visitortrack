@@ -26,6 +26,14 @@
                 "command": "dotnet build .\\VisitorTrack.Functions\\VisitorTrack.Functions.fsproj"
             },
             "problemMatcher": ["$msCompile"]
+        },
+        {
+            "label": "Publish Functions",
+            "type": "shell",
+            "windows": {
+                "command": "dotnet publish -c Release"
+            },
+            "problemMatcher": ["$msCompile"]
         }
     ]
 }

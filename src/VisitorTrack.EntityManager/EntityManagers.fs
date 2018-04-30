@@ -183,6 +183,20 @@ module VisitorManager =
             String750.create "Description" model.Description
             |> Result.map String750.value
 
+    let private getEmailAddress (model : Visitor) =
+        if String.IsNullOrEmpty(model.EmailAddress) then
+            Ok String.Empty
+        else
+            EmailAddress.create model.EmailAddress
+            |> Result.map EmailAddress.value
+
+    let private getContactNumber (model : Visitor) =
+        if String.IsNullOrEmpty(model.ContactNumber) then
+            Ok String.Empty
+        else
+            ContactNumber.create model.ContactNumber
+            |> Result.map ContactNumber.value
+
     let getAgeGroups () =
         AgeGroups.AsLookup();
 
@@ -203,10 +217,11 @@ module VisitorManager =
                 else
                     let sql = 
                         String.Format(@"SELECT TOP 25 
-                                            v.id, v.fullName, v.ageGroupId, v.hasPlacedMembership,
-                                            v.isActive, v.becameMemberOn, v.firstVisitedOn
+                                            v.id, v.fullName, v.ageGroupId, v.isActive, v.firstVisitedOn
                                         FROM v 
-                                        WHERE CONTAINS(v.fullName, '{0}')", 
+                                        WHERE NOT v.hasPlacedMembership
+                                        AND v.isActive
+                                        AND CONTAINS(v.fullName, '{0}')", 
                             data.Text)
 
                     return 
@@ -267,7 +282,6 @@ module VisitorManager =
 
         EntityManager.executeTask opts CollectionId.Visitor task
         
-
     let update (data : UpdateEntity<Visitor>) =
 
         let task (client: DocumentClient) databaseId collectionId = 
@@ -279,6 +293,8 @@ module VisitorManager =
 
                 let! validFullName = String254.create "Full Name" data.Model.FullName
                 let! description = getDescription data.Model
+                let! emailAddress = getEmailAddress data.Model
+                let! contactNumber = getContactNumber data.Model
 
                 let! entityId = EntityId.create data.EntityId
                 let! entity = EntityManager.find<Visitor> data.Options collectionId entityId
@@ -286,7 +302,8 @@ module VisitorManager =
                 entity.FullName <- String254.value validFullName
                 entity.Description <- description
                 entity.IsActive <- data.Model.IsActive
-                entity.HasPlacedMembership <- data.Model.HasPlacedMembership
+                entity.EmailAddress <- emailAddress
+                entity.ContactNumber <- contactNumber
                 entity.AgeGroupId <- data.Model.AgeGroupId
                 entity.FirstVisitedOn <- data.Model.FirstVisitedOn
                 entity.BecameMemberOn <- data.Model.BecameMemberOn
@@ -332,15 +349,17 @@ module VisitorManager =
                         |> Result.Error 
                 else
                     let! checkListData = getCheckList ()
-
                     let! description = getDescription data.Model
+                    let! emailAddress = getEmailAddress data.Model
+                    let! contactNumber = getContactNumber data.Model
 
                     let visitor = 
                         Visitor (
                             FullName = fullName,
                             Description = description,
                             AgeGroupId = data.Model.AgeGroupId,
-                            HasPlacedMembership = data.Model.HasPlacedMembership,
+                            EmailAddress = emailAddress,
+                            ContactNumber = contactNumber,
                             IsActive = data.Model.IsActive,
                             CreatedOn = DateTimeOffset.UtcNow,
                             FirstVisitedOn = data.Model.FirstVisitedOn,

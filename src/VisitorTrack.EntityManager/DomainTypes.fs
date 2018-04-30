@@ -16,6 +16,8 @@ module CustomTypes =
 
     type EmailAddress = private EmailAddress of string
 
+    type ContactNumber = private ContactNumber of string
+
     type Password = private Password of string
 
     type DefaultPassword = DefaultPassword of string
@@ -213,4 +215,17 @@ module CustomTypes =
         let equals (EmailAddress x) (EmailAddress y) =
             x = y
 
+    module ContactNumber =
+        open System.Text.RegularExpressions
+
+        let create value =
+            if String.IsNullOrEmpty(value) then
+                Error "Contact # is required"
+            elif Regex(@"\d{3}-\d{3}-\d{4}").Match(value).Success |> not then
+                Error "Contact # is not valid. Format should be XXX-XXX-XXXX"
+            else ContactNumber value |> Ok
+
+        let apply f (ContactNumber x) = f x
+
+        let value x = apply id x
    

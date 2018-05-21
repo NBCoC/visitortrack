@@ -12,11 +12,6 @@
     "moduleResolution": "node",
     "lib": ["es2017", "dom"]
   },
-  "exclude": [
-    "node_modules"
-  ],
-  "filesGlob": [
-    "./src/**/*.ts",
-    "./custom_typings/**/*.d.ts"
-  ]
+  "exclude": ["node_modules"],
+  "filesGlob": ["./src/**/*.ts", "./custom_typings/**/*.d.ts"]
 }

@@ -8,9 +8,9 @@ export interface AuthenticationResult {
   user: User;
 }
 
-export interface Lookup {
-  id: number;
-  name: string;
+export interface UserRole {
+  key: number;
+  value: string;
 }
 
 export interface User {
@@ -29,34 +29,60 @@ export interface UpdatePassword {
   confirmPassword: string;
 }
 
-export interface RecentVisitor {
+export interface CheckListItem {
   id: string;
-  fullName: string;
-  statusId: number;
-  statusName: string;
+  description: string;
+  type: string;
 }
 
-export interface VisitorSearch extends RecentVisitor {
+export interface VisitorCheckListItem extends CheckListItem {
+  completedOn?: Date;
+  completedBy: string;
+  comment: string;
+}
+
+export interface AgeGroup {
+  key: number;
+  value: string;
+}
+
+export interface VisitorLite {
+  id: string;
+  fullName: string;
+  isActive: boolean;
+  isMember: boolean;
+  becameMemberOn: Date;
+  firstVisitedOn: Date;
+}
+
+export interface VisitorSearch extends VisitorLite {
   ageGroupId: number;
   ageGroupName: string;
 }
 
 export interface Visitor extends VisitorSearch {
   description: string;
-  becameMemberOn: Date;
-  firstVisitedOn: Date;
+  contactNumber: string;
+  emailAddress: string;
   createdOn: Date;
-  kidsAgeGroups: number[];
+  checkList: VisitorCheckListItem[];
 }
 
-export class IsLoadingEvent {
+export interface VisitorReportItem {
+  monthId: number;
+  month: string;
+  visitors: VisitorLite[];
+  members: VisitorLite[];
+}
+
+export class LoadingEvent {
   private data: boolean;
 
   constructor(args: boolean) {
     this.data = args;
   }
 
-  public get args() {
+  public get isLoading() {
     return this.data;
   }
 }

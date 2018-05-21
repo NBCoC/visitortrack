@@ -8,8 +8,7 @@ export const setCredentials = (credentials: AuthenticationResult): void => {
   localStorage.setItem(CACHE_KEY, JSON.stringify(credentials || {}));
 };
 
-export const clearCredentials = (): void =>
-  setCredentials({} as AuthenticationResult);
+export const clearCredentials = (): void => setCredentials({} as AuthenticationResult);
 
 export const getCredentials = (): AuthenticationResult => {
   if (isLocalStorageSupported()) {

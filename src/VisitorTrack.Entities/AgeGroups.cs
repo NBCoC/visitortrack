@@ -21,7 +21,7 @@ namespace VisitorTrack.Entities
             switch (ageGroup)
             {
                 case AgeGroupEnum.Group18to29:
-                    return "18 - 19";
+                    return "18 - 29";
 
                 case AgeGroupEnum.Group29to39:
                     return "29 - 39";

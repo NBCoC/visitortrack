@@ -3,38 +3,39 @@ import { DialogController, DialogCloseResult } from 'aurelia-dialog';
 import { inject } from 'aurelia-framework';
 
 import { VisitorTrackService } from './../core/visitor-track-service';
-import { User, UserRole } from './../core/models';
+import { Visitor, AgeGroup } from './../core/models';
 import { FormValidator } from '../core/form-validator';
 
 @inject(DialogController, VisitorTrackService, ValidationControllerFactory)
-export class UserDialog extends FormValidator {
+export class VisitorDialog extends FormValidator {
   private dialogController: DialogController;
   private service: VisitorTrackService;
-  public model: User;
-  public roles: UserRole[];
+  public model: Visitor;
+  public ageGroups: AgeGroup[];
 
   constructor(dialogController: DialogController, service: VisitorTrackService, factory: ValidationControllerFactory) {
     super(factory);
     this.dialogController = dialogController;
     this.service = service;
-    this.model = {} as User;
-    this.roles = [];
+    this.model = {} as Visitor;
+    this.ageGroups = [];
   }
 
-  public async activate(model?: User): Promise<void> {
-    this.model = model ? Object.assign({}, model) : {} as User;
-    this.roles = await this.service.getUserRoles();
+  public async activate(model: Visitor): Promise<void> {
+    this.model = model ? Object.assign({}, model) : ({} as Visitor);
+    this.ageGroups = await this.service.getAgeGroups();
     await this.registerValidation();
   }
 
   protected registerValidationRules(): void {
-    ValidationRules.ensure('displayName')
+    ValidationRules.ensure('fullName')
       .required()
       .ensure('emailAddress')
-      .required()
       .email()
-      .ensure('roleId')
+      .ensure('ageGroupId')
       .required()
+      .ensure('contactNumber')
+      .matches(/\d{3}-\d{3}-\d{4}/)
       .on(this.model);
   }
 
@@ -48,7 +49,7 @@ export class UserDialog extends FormValidator {
 
     let id = this.model.id;
 
-    const upsert = id ? this.service.updateUser(id, this.model) : this.service.insertUser(this.model);
+    const upsert = id ? this.service.updateVisitor(id, this.model) : this.service.insertVisitor(this.model);
 
     id = await upsert;
 

@@ -1,0 +1,48 @@
+<template>
+  <div user-profile-page class="container page">
+    <div class="row">
+      <div class="two columns"></div>
+      <div class="eight columns">
+        <h5 class="u-text-center">User Profile</h5>
+       
+        <div class="card u-center-block">
+          <br />
+          <form submit.delegate="save()" vt-loading-form-indicator>
+            <label>Display Name</label>
+            <p>${ user.displayName }</p>
+           
+            <label>Email Address</label>
+            <p>${ user.emailAddress }</p>
+            
+            <label>Role</label>
+            <p>${ user.roleName }</p>
+            
+            <div>
+              <label for="oldPasswordInput">Old Password</label>
+              <span class="u-error"></span>
+              <input id="oldPasswordInput" type="password" class="u-full-width" placeholder="Old Password..." attach-focus="true" value.bind="model.oldPassword & validate"
+              />
+            </div>
+
+            <div>
+              <label for="newPasswordInput">New Password</label>
+              <span class="u-error"></span>
+              <input id="newPasswordInput" type="password" class="u-full-width" placeholder="New Password..." value.bind="model.newPassword & validate"
+              />
+            </div>
+
+            <div>
+              <label for="confirmPasswordInput">Confirm Password</label>
+              <span class="u-error"></span>
+              <input id="confirmPasswordInput" type="password" class="u-full-width" placeholder="Confirm Password..." value.bind="model.confirmPassword & validate"
+              />
+            </div>
+
+            <button type="submit" class="button-primary u-full-width">Save</button>
+          </form>
+        </div>
+
+      </div>
+      <div class="two columns"></div>
+    </div>
+</template>

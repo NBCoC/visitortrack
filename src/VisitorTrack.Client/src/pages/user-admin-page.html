@@ -1,58 +1,37 @@
 <template>
-  <div id="user-admin-page" class="page columns">
-    <div class="column">
-      <h1 class="title has-text-centered is-5">User Administration</h1>
+  <div user-admin-page class="container page">
+    <div class="row">
+      <div class="two columns"></div>
+      <div class="eight columns">
+        <h5 class="u-text-center">User Administration</h5>
 
-      <table class="table is-hoverable">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>
-              <button class="button is-info is-small" click.trigger="upsertUser()">
-                <span class="icon">
-                  <i class="oi" data-glyph="plus"></i>
-                </span>
-              </button>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr repeat.for="item of users | sortBy : 'displayName'">
-            <td>
-              ${ item.displayName }
-            </td>
-            <td>${ item.emailAddress }</td>
-            <td>${ item.roleName }</td>
-            <td>
-              <div class="field is-grouped">
-                <p class="control">
-                  <button class="button is-primary is-small" click.trigger="upsertUser(item)">
-                    <span class="icon">
-                      <i class="oi" data-glyph="pencil"></i>
-                    </span>
-                  </button>
-                </p>
-                <p class="control">
-                  <button class="button is-danger is-small" click.trigger="deleteUser(item)">
-                    <span class="icon">
-                      <i class="oi" data-glyph="trash"></i>
-                    </span>
-                  </button>
-                </p>
-                <p class="control">
-                  <button class="button is-warning is-small" click.trigger="resetPassword(item)">
-                    <span class="icon">
-                      <i class="oi" data-glyph="key"></i>
-                    </span>
-                  </button>
-                </p>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+        <button type="button" class="button-success u-center-block u-full-width" click.delegate="upsertUser()">New</button>
+
+        <div class="card u-center-block" repeat.for="item of users | sort : 'displayName'">
+          <br />
+          <div>
+            <span>Display Name</span>
+            <span class="u-pull-right">${ item.displayName }</span>
+          </div>
+          <div>
+            <span>Email Address</span>
+            <span class="u-pull-right">${ item.emailAddress }</span>
+          </div>
+          <div>
+            <span>Role</span>
+            <span class="u-pull-right">${ item.roleName }</span>
+          </div>
+          <br />
+          <div>
+            <button type="button" class="button-primary" click.delegate="upsertUser(item)">Edit</button>
+
+            <button type="button" class="button-danger" click.delegate="deleteUser(item)">Delete</button>
+
+            <button type="button" class="u-pull-right" click.delegate="resetPassword(item)">Reset Password</button>
+          </div>
+        </div>
+        <div class="two columns"></div>
+      </div>
     </div>
   </div>
 </template>

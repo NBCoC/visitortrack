@@ -1,0 +1,60 @@
+<template>
+  <ux-dialog>
+    <ux-dialog-header>
+      <h6>${ model.id ? 'Edit' : 'New' } Visitor</h6>
+    </ux-dialog-header>
+    <ux-dialog-body>
+      <form submit.delegate="save()" vt-loading-form-indicator>
+        <div>
+          <label for="fullNameInput">Full Name</label>
+          <span class="u-error"></span>
+          <input type="text" id="fullNameInput" class="u-full-width" attach-focus="true" value.bind="model.fullName & validate" />
+        </div>
+
+        <div>
+          <label for="emailAddressInput">Email Address</label>
+          <span class="u-error"></span>
+          <input type="email" id="emailAddressInput" class="u-full-width" value.bind="model.emailAddress & validate" />
+        </div>
+
+        <div>
+          <label for="contactNumberInput">Contact #</label>
+          <span class="u-error"></span>
+          <input type="tel" id="contactNumberInput" class="u-full-width" value.bind="model.contactNumber & validate" />
+        </div>
+
+        <div>
+          <label for="ageGroupInput">Age Group</label>
+          <span class="u-error"></span>
+          <select id="ageGroupInput" value.bind="model.ageGroupId & validate" class="u-full-width">
+            <option repeat.for="ageGroup of ageGroups" model.bind="ageGroup.Key">${ ageGroup.Value }</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="firstVisitInput">1st Visited On</label>
+          <span class="u-error"></span>
+          <vt-date-picker class-list.bind="'u-full-width'" value.bind="model.firstVisitedOn"></vt-date-picker>
+        </div>
+
+        <div>
+          <label for="membershipInput">Became Member On</label>
+          <span class="u-error"></span>
+          <vt-date-picker class-list.bind="'u-full-width'" value.bind="model.becameMemberOn"></vt-date-picker>
+        </div>
+
+        <div>
+          <label for="descriptionInput">Description</label>
+          <span class="u-error"></span>
+          <textarea id="descriptionInput" class="u-full-width" rows="5" value.bind="model.description"></textarea>
+        </div>
+
+        <button type="submit" show.bind="false">Save</button>
+      </form>
+    </ux-dialog-body>
+    <ux-dialog-footer>
+      <button class="button-primary" click.trigger="save()" vt-loading-indicator>Save</button>
+      <button click.trigger="cancel()" vt-loading-indicator>Cancel</button>
+    </ux-dialog-footer>
+  </ux-dialog>
+</template>

@@ -1,6 +1,6 @@
 import { autoinject, PLATFORM } from 'aurelia-framework';
 import { Redirect, NavigationInstruction, RouterConfiguration, Next, Router, PipelineStep } from 'aurelia-router';
-import { Api } from './core/api';
+import { VisitorTrackService } from './core/visitor-track-service';
 
 export class App {
   private router: Router;
@@ -8,7 +8,7 @@ export class App {
   public configureRouter(config: RouterConfiguration, router: Router): void {
     config.title = 'Visitor-Track';
     config.addPipelineStep('authorize', AuthorizeStep);
-    config.mapUnknownRoutes(PLATFORM.moduleName('pages/not-found-page'));
+    config.mapUnknownRoutes(PLATFORM.moduleName('pages/404-page'));
     config.fallbackRoute('main/home');
     config.map([
       {
@@ -27,7 +27,7 @@ export class App {
       },
       {
         route: '401',
-        moduleId: PLATFORM.moduleName('pages/unauthorized-page'),
+        moduleId: PLATFORM.moduleName('pages/401-page'),
         name: '401',
         title: '401 - Unauthorized',
         caseSensitive: true
@@ -40,15 +40,15 @@ export class App {
 
 @autoinject
 class AuthorizeStep implements PipelineStep {
-  private api: Api;
+  private service: VisitorTrackService;
 
-  constructor(api: Api) {
-    this.api = api;
+  constructor(service: VisitorTrackService) {
+    this.service = service;
   }
 
   public run(navigationInstruction: NavigationInstruction, next: Next): Promise<any> {
     const isSignInRoute = navigationInstruction.config.name === 'sign-in';
-    const isSignedIn = this.api.isSignedIn();
+    const isSignedIn = this.service.isSignedIn();
 
     if (isSignInRoute && !isSignedIn) {
       return next();
@@ -59,7 +59,7 @@ class AuthorizeStep implements PipelineStep {
     }
 
     if (isSignedIn) {
-      const user = this.api.getSignedUser();
+      const user = this.service.getSignedUser();
 
       let isAdminView = navigationInstruction.getAllInstructions().some(i => (i.config as any).adminView);
 

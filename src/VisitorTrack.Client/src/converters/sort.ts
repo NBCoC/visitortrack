@@ -1,4 +1,4 @@
-export class SortByValueConverter {
+export class SortValueConverter {
   public toView(array: any[], propertyName: string, asc?: boolean): any[] {
     if (!array || array.length === 0) {
       return [];
@@ -13,17 +13,13 @@ export class SortByValueConverter {
     }
 
     let func = (a: any, b: any) => {
-      let condition = asc
-        ? a[propertyName] > b[propertyName]
-        : b[propertyName] > a[propertyName];
+      let condition = asc ? a[propertyName] > b[propertyName] : b[propertyName] > a[propertyName];
 
       if (condition) {
         return 1;
       }
 
-      condition = asc
-        ? a[propertyName] < b[propertyName]
-        : b[propertyName] < a[propertyName];
+      condition = asc ? a[propertyName] < b[propertyName] : b[propertyName] < a[propertyName];
 
       if (condition) {
         return -1;

@@ -1,5 +1,33 @@
 <template>
-  <div class="page">
-      <h1>Home Page</h1>
+  <div home-page class="container page">
+    <div class="row">
+      <div class="twelve columns">
+        <div class="card">
+          <h5 class="u-text-center">Visitor / Member Report</h5>
+          <table class="u-full-width">
+            <thead>
+              <tr>
+                <th></th>
+                <th>
+                  <span class="u-pull-right">Visitor / Member</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr repeat.for="item of reportData">
+                <td>
+                  <a class="u-link" click.delegate="viewDetails(item.monthId)">${ item.month }</a>
+                </td>
+                <td>
+                  <span class="u-pull-right">${ item.visitors.length } / ${ item.members.length }</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <button type="button" class="u-full-width button-success" click.delegate="newVisitor()" if.bind="user.isEditor">New</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>

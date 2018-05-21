@@ -1,21 +1,20 @@
 import { notifySuccess } from './../core/notifications';
-import { Api } from './../core/api';
-import { UpdatePassword } from './../core/models';
+import { UpdatePassword, User } from './../core/models';
 import { autoinject } from 'aurelia-framework';
-import { DialogController } from 'aurelia-dialog';
 import { FormValidator } from '../core/form-validator';
 import { ValidationControllerFactory, ValidationRules } from 'aurelia-validation';
+import { VisitorTrackService } from '../core/visitor-track-service';
 
 @autoinject()
-export class ChangePasswordDialog extends FormValidator {
-  private dialogController: DialogController;
-  private api: Api;
+export class UserProfilePage extends FormValidator {
+  private service: VisitorTrackService;
   public model: UpdatePassword;
+  public user: User;
 
-  constructor(dialogController: DialogController, api: Api, factory: ValidationControllerFactory) {
+  constructor(service: VisitorTrackService, factory: ValidationControllerFactory) {
     super(factory);
-    this.dialogController = dialogController;
-    this.api = api;
+    this.service = service;
+    this.user = service.getSignedUser();
     this.model = {} as UpdatePassword;
   }
 
@@ -32,7 +31,6 @@ export class ChangePasswordDialog extends FormValidator {
   }
 
   public async activate(): Promise<void> {
-    this.model = {} as UpdatePassword;
     await this.registerValidation();
   }
 
@@ -40,12 +38,7 @@ export class ChangePasswordDialog extends FormValidator {
     const isValid = await this.validate();
     if (!isValid) return;
 
-    await this.api.updatePassword(this.model);
-    this.dialogController.ok();
+    await this.service.updatePassword(this.model);
     notifySuccess('Your password has been changed!');
-  }
-
-  public async cancel(): Promise<void> {
-    await this.dialogController.cancel();
   }
 }

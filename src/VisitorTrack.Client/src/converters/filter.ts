@@ -1,25 +1,19 @@
-export class FilterByValueConverter {
+export class FilterValueConverter {
   public toView(array: any[], propertyName: string, text: string): any[] {
     if (!array || array.length === 0) {
       return [];
     }
 
-    if (!propertyName) {
-      return array;
-    }
-
-    if (!text) {
+    if (!propertyName || !text) {
       return array;
     }
 
     text = text.toLocaleLowerCase();
 
     return array.filter(item => {
-      let value = item[propertyName];
+      const value = item[propertyName];
 
-      if (!value) {
-        return;
-      }
+      if (!value) return;
 
       return value.toLocaleLowerCase().indexOf(text) !== -1;
     });

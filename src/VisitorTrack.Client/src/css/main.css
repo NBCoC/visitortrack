@@ -1,0 +1,243 @@
+/* animations */
+@-webkit-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-moz-keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes spin {
+  0% {
+    -webkit-transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+@-moz-keyframes spin {
+  0% {
+    -moz-transform: rotate(0deg);
+  }
+  100% {
+    -moz-transform: rotate(360deg);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+div.page {
+  -webkit-animation: fadeIn 0.5s;
+  -moz-animation: fadeIn 0.5s;
+  animation: fadeIn 0.5s;
+}
+
+.container {
+  padding-left: 1.1rem;
+  padding-right: 1.1rem;
+}
+
+a {
+  text-decoration: none;
+}
+
+.u-text-bold {
+  font-weight: 600;
+}
+
+.small-button {
+  height: 30px;
+  line-height: 30px;
+  margin-bottom: 0;
+}
+
+span.u-error {
+  color: red;
+  font-size: 12px;
+}
+
+ul.list {
+  cursor: pointer;
+  list-style-type: none;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+ul.list li:hover {
+  color: #33c3f0;
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  margin: 0;
+  vertical-align: middle;
+}
+
+.u-link {
+  cursor: pointer;
+}
+
+.loader {
+  position: fixed;
+  bottom: 15px;
+  left: 15px;
+  width: 100px;
+  height: 100px;
+  border: 10px solid #f3f3f3;
+  border-top: 10px solid #33c3f0;
+  border-radius: 50%;
+  -webkit-animation: spin 1s linear infinite;
+  -moz-animation: spin 1s linear infinite;
+  animation: spin 1s linear infinite;
+}
+
+ux-dialog-overlay.active {
+  background-color: black;
+  opacity: 0.5;
+}
+
+ux-dialog > ux-dialog-body .card {
+  min-width: 200px;
+}
+
+ux-dialog > ux-dialog-footer button {
+  padding: 0 1.9rem;
+}
+
+@media (max-width: 380px) {
+  ux-dialog > ux-dialog-body .card {
+    min-width: 50px;
+  }
+}
+
+/*** pages ***/
+[sign-in-page] form {
+  padding-top: 70px;
+  max-width: 270px;
+}
+
+[user-profile-page] .card {
+  max-width: 350px;
+}
+
+[home-page] .card {
+  margin-top: 15px;
+}
+
+[home-page] .card ul li div:nth-child(2) {
+  font-size: 12px;
+}
+
+[misc-page] .message {
+  padding-top: 20px;
+  font-size: 20px;
+  line-height: 20px;
+  text-shadow: rgba(0, 0, 0, 0.5) 0 0 15px;
+  text-transform: uppercase;
+  font-family: 'Raleway', 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+/**** navbar ****/
+nav {
+  border-bottom: 1px solid #e1e1e1;
+  box-shadow: 1px 1px 1px #e1e1e1;
+}
+
+nav .navbar-header {
+  float: left;
+  font-size: 1.1rem;
+  font-weight: 300;
+  margin: 16px;
+}
+
+nav .navbar-header span {
+  font-size: 0.8rem;
+}
+
+nav .navbar-menu {
+  float: right;
+}
+
+nav .navbar-menu ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+nav .navbar-menu ul li {
+  float: left;
+  margin-bottom: 0;
+}
+
+nav .navbar-menu ul li a {
+  display: block;
+  text-align: center;
+  margin: 17px 10px;
+  color: black;
+}
+
+nav .navbar-menu ul li a:hover {
+  color: #33c3f0;
+}
+
+nav .navbar-menu ul li button {
+  height: 30px;
+  line-height: 30px;
+  margin: 14px;
+}
+
+@media (max-width: 560px) {
+  nav .navbar-header {
+    float: none;
+    text-align: center;
+  }
+}
+
+@media (max-width: 725px) {
+  [user-admin-page] .card div span {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  [user-admin-page] .card button {
+    width: 100%;
+    float: none;
+    margin-bottom: 5px;
+  }
+}
+
+@media (max-width: 345px) {
+  [visitor-search-page] .card div span {
+    float: none;
+  }
+}

@@ -1,0 +1,34 @@
+<template>
+  <ux-dialog>
+    <ux-dialog-header>
+      <h6>Month of ${ month }</h6>
+    </ux-dialog-header>
+    <ux-dialog-body>
+      <div class="row">
+        <div class="twelve columns">
+          <div class="card">
+            <h6>Visitors</h6>
+            <ul class="list">
+              <li repeat.for="visitor of visitors | sort : 'fullName'">
+                <a click.trigger="itemSelected(visitor.id)">${ visitor.fullName }</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="twelve columns">
+          <div class="card">
+            <h6>Members</h6>
+            <ul class="list">
+              <li repeat.for="member of members | sort : 'fullName'">
+                <a click.trigger="itemSelected(member.id)">${ member.fullName }</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </ux-dialog-body>
+    <ux-dialog-footer>
+      <button class="button-primary" click.trigger="close()">OK</button>
+    </ux-dialog-footer>
+  </ux-dialog>
+</template>

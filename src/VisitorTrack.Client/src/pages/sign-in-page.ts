@@ -1,4 +1,4 @@
-import { Api } from './../core/api';
+import { VisitorTrackService } from './../core/visitor-track-service';
 import { autoinject } from 'aurelia-framework';
 import { Router } from 'aurelia-router';
 import { AuthenticateUser } from './../core/models';
@@ -8,17 +8,21 @@ import { ValidationControllerFactory, ValidationRules } from 'aurelia-validation
 @autoinject()
 export class SignInPage extends FormValidator {
   private router: Router;
-  private api: Api;
+  private service: VisitorTrackService;
   public model: AuthenticateUser;
 
-  constructor(router: Router, api: Api, factory: ValidationControllerFactory) {
+  constructor(router: Router, service: VisitorTrackService, factory: ValidationControllerFactory) {
     super(factory);
     this.router = router;
-    this.api = api;
+    this.service = service;
     this.model = {} as AuthenticateUser;
   }
 
-  protected registerValidationRules(): void {
+  public async activate(): Promise<void> {
+    await this.registerValidation();
+  }
+
+  protected registerValidationRules() {
     ValidationRules.ensure('emailAddress')
       .required()
       .email()
@@ -27,11 +31,11 @@ export class SignInPage extends FormValidator {
       .on(this.model);
   }
 
-  public async signIn(): Promise<void> {
+  public async signIn() {
     const isValid = await this.validate();
     if (!isValid) return;
 
-    await this.api.signIn(this.model);
+    await this.service.signIn(this.model);
     this.router.navigate('main/home');
   }
 }

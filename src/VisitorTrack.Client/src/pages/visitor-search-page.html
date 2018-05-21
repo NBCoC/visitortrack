@@ -1,0 +1,34 @@
+<template>
+  <div visitor-search-page class="container page">
+    <div class="row">
+      <div class="two columns"></div>
+      <div class="eight columns">
+        <h5 class="u-text-center">Visitor Search</h5>
+
+        <form submit.delegate="search(searchControl.value)" vt-loading-form-indicator>
+          <button type="submit" show.bind="false"></button>
+          <input type="text" class="u-full-width" placeholder="Start typing then press ENTER key..." ref="searchControl" />
+        </form>
+
+        <div class="card u-center-block" repeat.for="item of searchResult | sort : 'fullName'">
+          <br />
+          <div>
+            <span>Name</span>
+            <span class="u-pull-right">
+              <a href="#/main/visitor-details/${ item.id }">${ item.fullName }</a>
+            </span>
+          </div>
+          <div>
+            <span>Status</span>
+            <span class="u-pull-right">${ item.hasPlacedMembership ? 'Member' : 'Visitor' }</span>
+          </div>
+          <div>
+            <span>Age Group</span>
+            <span class="u-pull-right">${ item.ageGroupName }</span>
+          </div>
+        </div>
+      </div>
+      <div class="two columns"></div>
+    </div>
+  </div>
+</template>

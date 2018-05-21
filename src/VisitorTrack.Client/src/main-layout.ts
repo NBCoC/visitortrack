@@ -1,30 +1,22 @@
-import { ChangePasswordDialog } from './dialogs/change-password-dialog';
-import { DialogService } from 'aurelia-dialog';
 import { User } from './core/models';
-import { Api } from './core/api';
+import { VisitorTrackService } from './core/visitor-track-service';
 import { autoinject, PLATFORM } from 'aurelia-framework';
 import { Router, RouterConfiguration } from 'aurelia-router';
 
 @autoinject()
 export class MainLayout {
   private router: Router;
-  private dialogService: DialogService;
-  private api: Api;
+  private service: VisitorTrackService;
   public user: User;
 
-  constructor(api: Api, dialogService: DialogService) {
-    this.api = api;
-    this.dialogService = dialogService;
-    this.user = api.getSignedUser();
+  constructor(service: VisitorTrackService) {
+    this.service = service;
+    this.user = service.getSignedUser();
   }
 
   public async signOut(): Promise<void> {
-    await this.api.signOut();
+    await this.service.signOut();
     this.router.navigate('sign-in');
-  }
-
-  public changePassword(): void {
-    this.dialogService.open({ viewModel: ChangePasswordDialog });
   }
 
   public configureRouter(config: RouterConfiguration, router: Router): void {
@@ -42,25 +34,33 @@ export class MainLayout {
         caseSensitive: true
       },
       {
-        route: 'search',
-        moduleId: PLATFORM.moduleName('pages/search-page'),
-        name: 'search',
-        title: 'Search',
+        route: 'user-profile',
+        moduleId: PLATFORM.moduleName('pages/user-profile-page'),
+        name: 'user-profile',
+        title: 'Profile',
         adminView: false,
         caseSensitive: true
       },
       {
-        route: 'visitor/:id',
-        moduleId: PLATFORM.moduleName('pages/visitor-page'),
-        name: 'visitor',
+        route: 'visitor-search',
+        moduleId: PLATFORM.moduleName('pages/visitor-search-page'),
+        name: 'visitor-search',
+        title: 'Visitor Search',
+        adminView: false,
+        caseSensitive: true
+      },
+      {
+        route: 'visitor-details/:id',
+        moduleId: PLATFORM.moduleName('pages/visitor-details-page'),
+        name: 'visitor-details',
         title: 'Visitor Details',
         adminView: false,
         caseSensitive: true
       },
       {
-        route: 'administration/users',
+        route: 'user-administration',
         moduleId: PLATFORM.moduleName('pages/user-admin-page'),
-        name: 'users',
+        name: 'user-admin',
         title: 'User Administration',
         adminView: true,
         caseSensitive: true

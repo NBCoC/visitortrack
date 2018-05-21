@@ -1,0 +1,49 @@
+<template>
+  <div visitor-details-page class="container page">
+    <div class="row">
+      <div class="twelve column">
+        <h5 class="u-text-center">Visitor Details</h5>
+      </div>
+
+      <div class="five columns">
+        <div class="card">
+          <br />
+          <label>Full Name</label>
+          <p>${ model.fullName }</p>
+
+          <label>Email Address</label>
+          <p>${ model.emailAddress }</p>
+
+          <label>Contact #</label>
+          <p>${ model.contactNumber }</p>
+
+          <label>Age Group</label>
+          <p>${ model.ageGroupName }</p>
+
+          <label>Status</label>
+          <p>${ model.isMember ? 'Member' : 'Visitor' }</p>
+
+          <label>Active</label>
+          <p>${ model.isActive ? 'Yes' : 'No' }</p>
+
+          <label>1st Visited On</label>
+          <p>${ model.firstVisitedOn | dateFormat : 'MMMM Do YYYY' }</p>
+
+          <label>Became Member On</label>
+          <p>${ model.becameMemberOn | dateFormat : 'MMMM Do YYYY' }</p>
+
+          <label>Description</label>
+          <p>${ model.description }</p>
+
+          <button type="button" class="button-primary u-full-width" click.delegate="editVisitor()" if.bind="user.isEditor">Edit</button>
+
+          <button type="button" class="button-danger u-full-width" click.delegate="deleteVisitor()" if.bind="user.isAdmin">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="seven columns">
+
+    </div>
+  </div>
+</template>

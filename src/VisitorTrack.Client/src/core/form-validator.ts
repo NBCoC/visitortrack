@@ -15,13 +15,8 @@ export abstract class FormValidator {
     this.validationController.validateTrigger = validateTrigger.change;
   }
 
-  public async activate(): Promise<void> {
-    await this.registerValidation();
-  }
-
   protected async validate(): Promise<boolean> {
-    const result = await this.validationController.validate();
-    return result.valid;
+    return (await this.validationController.validate()).valid;
   }
 
   protected async registerValidation(): Promise<void> {
@@ -36,9 +31,7 @@ class CustomValidationRenderer implements ValidationRenderer {
   public render(instruction: RenderInstruction): void {
     for (let { elements } of instruction.unrender) {
       elements.forEach(target => {
-        target.classList.remove('is-danger');
-        const parent = target.parentElement.parentElement;
-        let element = parent.querySelector('.help.is-danger');
+        let element = target.parentElement.querySelector('.u-error');
         if (!element) return;
         element.textContent = '';
       });
@@ -47,9 +40,7 @@ class CustomValidationRenderer implements ValidationRenderer {
     for (let { result, elements } of instruction.render) {
       elements.forEach(target => {
         if (result.valid) return;
-        target.classList.add('is-danger');
-        const parent = target.parentElement.parentElement;
-        let element = parent.querySelector('.help.is-danger');
+        let element = target.parentElement.querySelector('.u-error');
         if (!element) return;
         element.textContent = result.message;
       });

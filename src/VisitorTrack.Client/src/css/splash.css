@@ -1,0 +1,22 @@
+.splash {
+  text-align: center;
+  margin: 10% 0 0;
+  box-sizing: border-box;
+}
+
+.splash div {
+  text-shadow: rgba(0, 0, 0, 0.5) 0 0 15px;
+  text-transform: uppercase;
+  font-family: 'Raleway', 'HelveticaNeue', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.splash .splash-text {
+  font-size: 52px;
+  line-height: 52px;
+}
+
+.splash .splash-loading {
+  font-size: 20px;
+  line-height: 20px;
+  padding-top: 20px;
+}

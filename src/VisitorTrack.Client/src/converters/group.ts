@@ -1,4 +1,4 @@
-export class GroupByValueConverter {
+export class GroupValueConverter {
   public toView(array: any[], propertyName: string): any[] {
     if (!array || array.length === 0) {
       return [];
@@ -11,7 +11,7 @@ export class GroupByValueConverter {
     let groups = {};
 
     array.forEach(item => {
-      let group = item[propertyName];
+      const group = item[propertyName];
 
       groups[group] = groups[group] || [];
 

@@ -10,7 +10,7 @@ namespace VisitorTrack.Entities
 
         public string FullName { get; set; }
 
-        public bool HasPlacedMembership => BecameMemberOn.HasValue;
+        public bool IsMember => BecameMemberOn.HasValue;
 
         public bool IsActive { get; set; }
 

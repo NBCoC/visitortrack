@@ -277,7 +277,10 @@ module VisitorManager =
 
                     dto
 
-                return [|1..12|] |> Array.map (createReportItem >> mapReportItem)
+                return 
+                    [|1..12|] 
+                    |> Array.map (createReportItem >> mapReportItem)
+                    |> Array.filter (fun item -> item.MonthId <= today.Month)
             }
 
         EntityManager.executeTask opts CollectionId.Visitor task
@@ -360,7 +363,7 @@ module VisitorManager =
                             AgeGroupId = data.Model.AgeGroupId,
                             EmailAddress = emailAddress,
                             ContactNumber = contactNumber,
-                            IsActive = data.Model.IsActive,
+                            IsActive = true,
                             CreatedOn = DateTimeOffset.UtcNow,
                             FirstVisitedOn = data.Model.FirstVisitedOn,
                             BecameMemberOn = data.Model.BecameMemberOn,

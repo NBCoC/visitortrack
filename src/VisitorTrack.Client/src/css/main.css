@@ -231,6 +231,15 @@ nav .navbar-menu ul li button {
     text-align: center;
   }
 }
+@media (min-width: 560px) {
+  ux-dialog {
+    min-width: 400px;
+  }
+
+  .vt-date-picker input {
+    width: 85%;
+  }
+}
 @media (max-width: 725px) {
   [user-admin-page] .card div span {
     width: 100%;

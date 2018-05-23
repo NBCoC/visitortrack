@@ -240,14 +240,12 @@ module VisitorManager =
                 let memberSql =
                     String.Format(@"SELECT * FROM v
                                     WHERE v.isActive 
-                                    AND v.isMember
                                     AND v.becameMemberOn >= '{0}' 
                                     AND v.becameMemberOn <= '{1}'", startDate, today)
 
                 let visitorSql =
                     String.Format(@"SELECT * FROM v
                                     WHERE v.isActive 
-                                    AND NOT v.isMember
                                     AND v.firstVisitedOn >= '{0}' 
                                     AND v.firstVisitedOn <= '{1}'", startDate, today)
 

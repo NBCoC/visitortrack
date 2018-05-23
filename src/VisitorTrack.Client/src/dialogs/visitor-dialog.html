@@ -40,7 +40,7 @@
         <div>
           <label for="firstVisitInput">1st Visited On</label>
           <span class="u-error"></span>
-          <vt-date-picker class-list.bind="'u-full-width'" value.bind="model.firstVisitedOn"></vt-date-picker>
+          <vt-date-picker class-list.bind="'u-full-width'" value.bind="model.firstVisitedOn & validate"></vt-date-picker>
         </div>
 
         <div if.bind="model.id">

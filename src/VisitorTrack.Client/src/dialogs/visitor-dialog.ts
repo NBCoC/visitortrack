@@ -36,6 +36,8 @@ export class VisitorDialog extends FormValidator {
       .required()
       .ensure('contactNumber')
       .matches(/\d{3}-\d{3}-\d{4}/)
+      .ensure('firstVisitedOn')
+      .required()
       .on(this.model);
   }
 

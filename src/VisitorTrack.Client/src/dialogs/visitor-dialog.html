@@ -31,13 +31,19 @@
           </select>
         </div>
 
+        <div if.bind="model.id">
+          <label for="activeInput">Active</label>
+          <span class="u-error"></span>
+          <input type="checkbox" id="activeInput" class="u-full-width" checked.bind="model.isActive" />
+        </div>
+
         <div>
           <label for="firstVisitInput">1st Visited On</label>
           <span class="u-error"></span>
           <vt-date-picker class-list.bind="'u-full-width'" value.bind="model.firstVisitedOn"></vt-date-picker>
         </div>
 
-        <div>
+        <div if.bind="model.id">
           <label for="membershipInput">Became Member On</label>
           <span class="u-error"></span>
           <vt-date-picker class-list.bind="'u-full-width'" value.bind="model.becameMemberOn"></vt-date-picker>

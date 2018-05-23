@@ -5,11 +5,15 @@ import * as Pikaday from 'pikaday';
 @customElement('vt-date-picker')
 @inlineView(
   `<template>
-    <input type="text" class.bind="classList" readonly />
+    <div class="vt-date-picker">
+      <input type="text" class.bind="classList" readonly />
+      <button type="button" class="button-danger" click.trigger="clearValue()">X</button>
+    </div>
   </template>`
 )
 export class DatePickerCustomElement implements ComponentAttached {
   private element: Element;
+  private datePicker: any;
   @bindable classList: string;
 
   @bindable({ defaultBindingMode: bindingMode.twoWay })
@@ -20,14 +24,19 @@ export class DatePickerCustomElement implements ComponentAttached {
   }
 
   public attached(): void {
-    const datePicker = new Pikaday({
+    this.datePicker = new Pikaday({
       format: 'MM/DD/YYYY',
       field: this.element.querySelector('input'),
-      onSelect: () => (this.value = datePicker.getMoment().toDate())
+      onSelect: () => (this.value = this.datePicker.getMoment().toDate())
     });
 
     if (!this.value) return;
 
-    datePicker.setDate(this.value);
+    this.datePicker.setDate(this.value);
+  }
+
+  public clearValue(): void {
+    this.value = null;
+    this.datePicker.setDate(null);
   }
 }

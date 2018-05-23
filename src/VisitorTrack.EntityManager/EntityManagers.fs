@@ -217,11 +217,9 @@ module VisitorManager =
                 else
                     let sql = 
                         String.Format(@"SELECT TOP 25 
-                                            v.id, v.fullName, v.ageGroupId, v.isActive, v.firstVisitedOn
+                                            v.id, v.fullName, v.ageGroupId, v.isActive, v.firstVisitedOn, v.becameMemberOn 
                                         FROM v 
-                                        WHERE NOT v.hasPlacedMembership
-                                        AND v.isActive
-                                        AND CONTAINS(v.fullName, '{0}')", 
+                                        WHERE CONTAINS(v.fullName, '{0}')", 
                             data.Text)
 
                     return 
@@ -241,14 +239,15 @@ module VisitorManager =
 
                 let memberSql =
                     String.Format(@"SELECT * FROM v
-                                    WHERE v.hasPlacedMembership
+                                    WHERE v.isActive 
+                                    AND v.isMember
                                     AND v.becameMemberOn >= '{0}' 
                                     AND v.becameMemberOn <= '{1}'", startDate, today)
 
                 let visitorSql =
                     String.Format(@"SELECT * FROM v
-                                    WHERE NOT v.hasPlacedMembership
-                                    AND v.isActive
+                                    WHERE v.isActive 
+                                    AND NOT v.isMember
                                     AND v.firstVisitedOn >= '{0}' 
                                     AND v.firstVisitedOn <= '{1}'", startDate, today)
 

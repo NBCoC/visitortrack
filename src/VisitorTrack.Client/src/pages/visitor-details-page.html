@@ -53,7 +53,7 @@
                 <input id="${ item.id }" type="checkbox" class="u-full-width" checked.bind="item.isChecked" change.delegate="toggleCheckListItemCompleted(item)" /> ${ item.description }
               </label>
               <p if.bind="item.completedOn">Completd on ${ item.completedOn | dateFormat : 'MMMM Do YYYY' } by ${ item.completedBy }</p>
-              <p if.bind="item.comment">Note: ${ item.comment }</p>
+              <p if.bind="item.comment">Comment: ${ item.comment }</p>
             </div>
           </div>
         </div>

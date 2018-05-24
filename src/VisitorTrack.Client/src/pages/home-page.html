@@ -33,11 +33,11 @@
     <div class="row" show.bind="hasReport">
       <div class="twelve columns">
         <div class="card">
-          <h6 class="u-text-center">Month of ${ selectedReport.month }</h6>
+          <h6 class="u-text-center">${ selectedReport.month }</h6>
 
           <div class="row">
             <div class="six columns report-data">
-              <h6>Visitors</h6>
+              <h6>${ selectedReport.visitors.length } Visitor(s)</h6>
               <ul class="list">
                 <li repeat.for="visitor of selectedReport.visitors | sort : 'fullName'">
                   <a href="#/main/visitor-details/${ visitor.id }">${ visitor.fullName }</a>
@@ -46,7 +46,7 @@
             </div>
 
             <div class="six columns report-data">
-              <h6>Members</h6>
+              <h6>${ selectedReport.members.length } Member(s)</h6>
               <ul class="list">
                 <li repeat.for="member of selectedReport.members | sort : 'fullName'">
                   <a href="#/main/visitor-details/${ member.id }">${ member.fullName }</a>

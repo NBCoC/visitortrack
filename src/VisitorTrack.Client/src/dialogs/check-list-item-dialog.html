@@ -1,0 +1,28 @@
+<template>
+  <ux-dialog>
+    <ux-dialog-header>
+      <h6>Check ${ model.description }</h6>
+    </ux-dialog-header>
+    <ux-dialog-body>
+      <form submit.delegate="save()" vt-loading-form-indicator>
+        <div>
+          <label for="completedOnInput">Completed On</label>
+          <span class="u-error"></span>
+          <vt-date-picker class-list.bind="'u-full-width'" value.bind="model.completedOn & validate"></vt-date-picker>
+        </div>
+
+        <div>
+          <label for="commentInput">Comment</label>
+          <span class="u-error"></span>
+          <textarea id="commentInput" class="u-full-width" rows="5" value.bind="model.comment & validate"></textarea>
+        </div>
+
+        <button type="submit" show.bind="false">Save</button>
+      </form>
+    </ux-dialog-body>
+    <ux-dialog-footer>
+      <button class="button-primary" click.trigger="save()" vt-loading-indicator>Save</button>
+      <button click.trigger="cancel()" vt-loading-indicator>Cancel</button>
+    </ux-dialog-footer>
+  </ux-dialog>
+</template>

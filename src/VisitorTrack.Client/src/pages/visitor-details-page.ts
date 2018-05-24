@@ -1,7 +1,8 @@
+import { CheckListItemDialog } from './../dialogs/check-list-item-dialog';
 import { DialogService } from 'aurelia-dialog';
 import { inject } from 'aurelia-framework';
 import { VisitorTrackService } from './../core/visitor-track-service';
-import { Visitor, User } from './../core/models';
+import { Visitor, User, VisitorCheckListItem } from './../core/models';
 import { ConfirmDialog } from '../dialogs/confirm-dialog';
 import { Router } from 'aurelia-router';
 import { VisitorDialog } from '../dialogs/visitor-dialog';
@@ -25,7 +26,7 @@ export class VisitorDetailsPage {
 
   public async activate(params: any) {
     this.user = this.service.getSignedUser();
-    this.model = await this.service.getVisitor(params.id);
+    await this.getVisitor(params.id);
   }
 
   public editVisitor() {
@@ -33,7 +34,7 @@ export class VisitorDetailsPage {
       if (result.wasCancelled) {
         return;
       }
-      this.service.getVisitor(this.model.id).then(data => (this.model = data));
+      this.getVisitor(this.model.id);
     });
   }
 
@@ -46,5 +47,45 @@ export class VisitorDetailsPage {
         }
         this.service.deleteVisitor(this.model.id).then(() => this.router.navigate('home'));
       });
+  }
+
+  public toggleCheckListItemCompleted(item: VisitorCheckListItem) {
+    item.isChecked = !item.isChecked;
+
+    if (!this.user.isEditor) return;
+
+    if (item.completedOn) {
+      this.dialogService
+        .open({ viewModel: ConfirmDialog, model: `Are you sure you want to uncheck ${item.description}?` })
+        .whenClosed(result => {
+          if (result.wasCancelled) {
+            return;
+          }
+          this.service.updateVisitorCheckList(this.model.id, item).then(() => this.getVisitor(this.model.id));
+        });
+
+      return;
+    }
+
+    this.dialogService.open({ viewModel: CheckListItemDialog, model: item }).whenClosed(result => {
+      if (result.wasCancelled) {
+        return;
+      }
+      this.getVisitor(this.model.id);
+    });
+  }
+
+  private async getVisitor(id: string) {
+    this.model = await this.service.getVisitor(id);
+
+    this.model.checkList = this.model.checkList.map(item => {
+      item.visitorId = this.model.id;
+      item.completedBy = this.user.displayName;
+
+      if (item.completedOn) {
+        item.isChecked = true;
+      }
+      return item;
+    });
   }
 }

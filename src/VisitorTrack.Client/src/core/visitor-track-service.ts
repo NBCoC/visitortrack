@@ -12,7 +12,8 @@ import {
   UserRole,
   VisitorReportItem,
   Visitor,
-  AgeGroup
+  AgeGroup,
+  VisitorCheckListItem
 } from './models';
 import { getCredentials, setCredentials, clearCredentials } from './local-storage';
 
@@ -171,5 +172,11 @@ export class VisitorTrackService {
     return this.client
       .delete(`DeleteVisitorHttpTrigger?contextUserId=${this.getSignedUser().id}&entityId=${id}`)
       .then(result => true);
+  }
+
+  public updateVisitorCheckList(id: string, content: VisitorCheckListItem): Promise<string> {
+    return this.client
+      .put(`UpdateVisitorCheckListItemHttpTrigger?contextUserId=${this.getSignedUser().id}&entityId=${id}`, content)
+      .then(result => id);
   }
 }

@@ -40,10 +40,24 @@
           <button type="button" class="button-danger u-full-width" click.delegate="deleteVisitor()" if.bind="user.isAdmin">Delete</button>
         </div>
       </div>
-    </div>
 
-    <div class="seven columns">
+      <div class="seven columns">
+        <div class="card">
+          <h6>Check List</h6>
 
+          <div repeat.for="group of model.checkList | group : 'type' | sort : 'groupName'" class="checklist">
+            <p>${ group.groupName }</p>
+
+            <div repeat.for="item of group.items" class="checklist-item">
+              <label for="${ item.id }">
+                <input id="${ item.id }" type="checkbox" class="u-full-width" checked.bind="item.isChecked" change.delegate="toggleCheckListItemCompleted(item)" /> ${ item.description }
+              </label>
+              <p if.bind="item.completedOn">Completd on ${ item.completedOn | dateFormat : 'MMMM Do YYYY' } by ${ item.completedBy }</p>
+              <p if.bind="item.comment">Note: ${ item.comment }</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

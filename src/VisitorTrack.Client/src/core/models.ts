@@ -39,6 +39,8 @@ export interface VisitorCheckListItem extends CheckListItem {
   completedOn?: Date;
   completedBy: string;
   comment: string;
+  isChecked: boolean;
+  visitorId: string;
 }
 
 export interface AgeGroup {

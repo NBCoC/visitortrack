@@ -118,6 +118,24 @@ input[type='radio'] {
   padding: 0 1rem;
 }
 
+.checklist {
+  margin-bottom: 1rem;
+}
+
+.checklist label {
+  font-weight: 300;
+}
+
+.checklist .checklist-item input[type='checkbox'] {
+  margin-bottom: .2rem;
+}
+
+.checklist .checklist-item p {
+  font-size: .8rem;
+  margin-left: 33px;
+  margin-bottom: 0;
+}
+
 .loader {
   position: fixed;
   bottom: 15px;

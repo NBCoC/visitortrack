@@ -16,7 +16,7 @@
             <tbody>
               <tr repeat.for="item of reportData">
                 <td>
-                  <a class="u-link" click.delegate="viewDetails(item.monthId)">${ item.month }</a>
+                  <a class="u-link" click.trigger="selectReport(item.monthId)">${ item.month }</a>
                 </td>
                 <td>
                   <span class="u-pull-right">${ item.visitors.length } / ${ item.members.length }</span>
@@ -25,7 +25,35 @@
             </tbody>
           </table>
 
-          <button type="button" class="u-full-width button-success" click.delegate="newVisitor()" if.bind="user.isEditor">New</button>
+          <button type="button" class="u-full-width button-success" click.trigger="newVisitor()" if.bind="user.isEditor">New</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" show.bind="hasReport">
+      <div class="twelve columns">
+        <div class="card">
+          <h6 class="u-text-center">Month of ${ selectedReport.month }</h6>
+
+          <div class="row">
+            <div class="six columns report-data">
+              <h6>Visitors</h6>
+              <ul class="list">
+                <li repeat.for="visitor of selectedReport.visitors | sort : 'fullName'">
+                  <a href="#/main/visitor-details/${ visitor.id }">${ visitor.fullName }</a>
+                </li>
+              </ul>
+            </div>
+
+            <div class="six columns report-data">
+              <h6>Members</h6>
+              <ul class="list">
+                <li repeat.for="member of selectedReport.members | sort : 'fullName'">
+                  <a href="#/main/visitor-details/${ member.id }">${ member.fullName }</a>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>

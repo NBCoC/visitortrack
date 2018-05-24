@@ -118,6 +118,10 @@ input[type='radio'] {
   padding: 0 1rem;
 }
 
+.report-data {
+  padding-left: 15px;
+}
+
 .checklist {
   margin-bottom: 1rem;
 }

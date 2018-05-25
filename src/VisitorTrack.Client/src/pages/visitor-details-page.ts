@@ -80,7 +80,10 @@ export class VisitorDetailsPage {
 
     this.model.checkList = this.model.checkList.map(item => {
       item.visitorId = this.model.id;
-      item.completedBy = this.user.displayName;
+
+      if (!item.completedBy) {
+        item.completedBy = this.user.displayName;
+      }
 
       if (item.completedOn) {
         item.isChecked = true;

@@ -20,6 +20,10 @@
   </ItemGroup>
   
   <ItemGroup>
+    <None Include="GeneratePassword.fsx" />
+  </ItemGroup>
+  
+  <ItemGroup>
     <ProjectReference Include="..\VisitorTrack.Entities\VisitorTrack.Entities.csproj" />
   </ItemGroup>
 
